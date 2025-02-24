@@ -23,5 +23,14 @@ namespace WebApplication1.Controllers
             // Retornar una respuesta de éxito
             return Ok(new { message = "Puntuación calculada y guardada correctamente" });
         }
+        [HttpPost("calcular-IceTotal")]
+        public async Task<IActionResult> calcularIceTotal(int emprendedorId)
+        {
+            // Llamar al servicio para calcular la puntuación
+            await _encuestaService.calcularIceTotal(emprendedorId);
+
+            // Retornar una respuesta de éxito
+            return Ok(new { message = "Puntuación calculada y guardada correctamente" });
+        }
     }
 }

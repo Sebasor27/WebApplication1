@@ -253,3 +253,4 @@
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/obj/Debug/net8.0/WebApplication1.pdb
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/obj/Debug/net8.0/WebApplication1.genruntimeconfig.cache
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/obj/Debug/net8.0/ref/WebApplication1.dll
+/mnt/volumen/sebas/Programas/programa 1/WebApplication1/obj/Debug/net8.0/WebApplication1.sourcelink.json

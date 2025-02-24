@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Models;
 
@@ -14,31 +15,24 @@ public class EncuestaService
     {
         try
         {
-            // Traemos todas las competencias con sus preguntas asociadas
             var competencias = await _context.Competencias
                                              .Include(c => c.PreguntasIces)
                                              .ToListAsync();
 
-            // Traemos todas las respuestas para el emprendedor de una vez
             var respuestas = await _context.EncuestasIces
                                            .Where(e => e.IdEmprendedor == emprendedorId)
                                            .ToListAsync();
 
             var tareas = competencias.Select(async competencia =>
             {
-                // Filtramos las preguntas que corresponden a esta competencia
                 var preguntas = competencia.PreguntasIces;
 
-                // Filtramos las respuestas que corresponden a estas preguntas
                 var respuestasCompetencia = respuestas.Where(e => preguntas.Any(p => p.IdPregunta == e.IdPregunta)).ToList();
 
-                // Sumar las respuestas para obtener la "valoracion" de esta competencia
                 var valoracion = respuestasCompetencia.Sum(r => r.ValorRespuesta);
 
-                // Calcular la puntuación de la competencia
                 var puntuacionCompetencia = CalcularPuntuacionCompetencia(valoracion, competencia.PuntosMaximos, competencia.PesoRelativo);
 
-                // Crear el resultado
                 var resultado = new ResultadosIce
                 {
                     IdEmprendedor = emprendedorId,
@@ -47,22 +41,79 @@ public class EncuestaService
                     PuntuacionCompetencia = puntuacionCompetencia
                 };
 
-                // Añadir el resultado a la base de datos
                 await _context.ResultadosIces.AddAsync(resultado);
             });
 
-            // Ejecutamos todas las tareas en paralelo
             await Task.WhenAll(tareas);
 
-            // Guardamos los cambios de una sola vez después de procesar todas las competencias
             await _context.SaveChangesAsync();
         }
         catch (Exception ex)
         {
-            // Manejo de excepción (log, rethrow, etc.)
+         
             throw new ApplicationException("Error al calcular y guardar la puntuación de las competencias", ex);
         }
     }
+
+    public async Task calcularIceTotal(int emprendedorId)
+    {
+        try
+        {
+            
+            // Obtener los resultados de las competencias del emprendedor
+            var resultados = await _context.ResultadosIces
+                                                .Where(r => r.IdEmprendedor == emprendedorId)
+                                                .ToListAsync();
+    
+                var ValoriceTotal = resultados.Sum(r => r.PuntuacionCompetencia);
+    
+                var emprendedor = await _context.Emprendedores.FindAsync(emprendedorId);
+    
+                var nuevoResumenIce = new ResumenIce
+                {
+                    IdEmprendedor = emprendedorId,
+                    ValorIceTotal = ValoriceTotal
+                };
+
+                await _context.ResumenIces.AddAsync(nuevoResumenIce);
+    
+                await _context.SaveChangesAsync();
+            // calcular indicador en rango de valorice total
+            var indicadores = _context.Indicadores.ToList();
+            var indicadorEncontrado = indicadores.FirstOrDefault(indicador => {
+                var rango = indicador.Rango?.Trim('[',')') ?? string.Empty;
+                var limite = (indicador.Rango ?? string.Empty).Split("-");
+
+                double rangoInicio = double.Parse(limite[0].Trim(), CultureInfo.InvariantCulture);
+                double rangoFin = double.Parse(limite[1].Trim(), CultureInfo.InvariantCulture);
+
+                return (double)ValoriceTotal >= rangoInicio && (double)ValoriceTotal < rangoFin;
+            });
+            if (indicadorEncontrado != null)
+            {
+                var resumenIce = new ResumenIce
+                {
+                    IdEmprendedor = emprendedorId,
+                    ValorIceTotal = ValoriceTotal,
+                    IdIndicadores = indicadorEncontrado.IdIndicadores
+                };
+                await _context.ResumenIces.AddAsync(resumenIce);
+                await _context.SaveChangesAsync();
+
+                Console.WriteLine("Indicador encontrado: ", indicadorEncontrado);
+            }else {
+                Console.WriteLine("Indicador no encontrado");
+            }
+            
+
+
+        }
+        catch(Exception ex)
+        {
+            throw new ApplicationException("Error al calcular el ICE total", ex);
+        }
+    }
+
 
     private decimal CalcularPuntuacionCompetencia(int valoracion, int puntosMaximos, decimal pesoRelativo)
     {
