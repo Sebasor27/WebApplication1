@@ -3,8 +3,7 @@ using WebApplication1.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<CentroEmpContext>(options =>
-    options.UseMySql(builder.Configuration.GetConnectionString("YourConnectionString"), 
-    new MySqlServerVersion(new Version(8, 0, 21))));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("YourConnectionString")));
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

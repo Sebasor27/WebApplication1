@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Pomelo.EntityFrameworkCore.MySql.Scaffolding.Internal;
 
 namespace WebApplication1.Models;
@@ -47,23 +48,25 @@ public partial class CentroEmpContext : DbContext
     public virtual DbSet<Usuario> Usuarios { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseMySql("server=localhost;database=centroEmp;user=root", Microsoft.EntityFrameworkCore.ServerVersion.Parse("10.4.28-mariadb"));
-
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            optionsBuilder.UseSqlServer("Server=localhost;Database=centroEmp;User Id=sa;Password=TuContraseñaFuerte123;");
+        }
+    }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
-            .UseCollation("utf8mb4_general_ci")
-            .HasCharSet("utf8mb4");
+            .UseCollation("SQL_Latin1_General_CP1_CI_AS");
 
         modelBuilder.Entity<AccionesIepm>(entity =>
         {
-            entity.HasKey(e => e.IdAccionesIepm).HasName("PRIMARY");
+            entity.HasKey(e => e.IdAccionesIepm).HasName("PK_accionesIEPM");
 
             entity.ToTable("accionesIEPM");
 
             entity.Property(e => e.IdAccionesIepm)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_accionesIEPM");
             entity.Property(e => e.Rango)
                 .HasMaxLength(50)
@@ -75,12 +78,12 @@ public partial class CentroEmpContext : DbContext
 
         modelBuilder.Entity<Competencia>(entity =>
         {
-            entity.HasKey(e => e.IdCompetencia).HasName("PRIMARY");
+            entity.HasKey(e => e.IdCompetencia).HasName("PK_competencias");
 
             entity.ToTable("competencias");
 
             entity.Property(e => e.IdCompetencia)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_competencia");
             entity.Property(e => e.NombreCompetencia)
                 .HasMaxLength(100)
@@ -89,23 +92,23 @@ public partial class CentroEmpContext : DbContext
                 .HasPrecision(6, 5)
                 .HasColumnName("peso_relativo");
             entity.Property(e => e.PuntosMaximos)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("puntos_maximos");
         });
 
         modelBuilder.Entity<DatosEmp>(entity =>
         {
-            entity.HasKey(e => e.IdDatosEmp).HasName("PRIMARY");
+            entity.HasKey(e => e.IdDatosEmp).HasName("PK_datos_emp");
 
             entity.ToTable("datos_emp");
 
             entity.HasIndex(e => e.IdEmprendedor, "fk_id_emprendedor");
 
             entity.Property(e => e.IdDatosEmp)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_datos_emp");
             entity.Property(e => e.IdEmprendedor)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_emprendedor");
             entity.Property(e => e.NegociosEmp)
                 .HasMaxLength(50)
@@ -130,12 +133,12 @@ public partial class CentroEmpContext : DbContext
 
         modelBuilder.Entity<Dimensione>(entity =>
         {
-            entity.HasKey(e => e.IdDimension).HasName("PRIMARY");
+            entity.HasKey(e => e.IdDimension).HasName("PK_dimensiones");
 
             entity.ToTable("dimensiones");
 
             entity.Property(e => e.IdDimension)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_dimension");
             entity.Property(e => e.NombreDimension)
                 .HasMaxLength(100)
@@ -144,13 +147,13 @@ public partial class CentroEmpContext : DbContext
                 .HasPrecision(6, 5)
                 .HasColumnName("peso_relativo");
             entity.Property(e => e.PuntosMaximos)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("puntos_maximos");
         });
 
         modelBuilder.Entity<Emprendedore>(entity =>
         {
-            entity.HasKey(e => e.IdEmprendedor).HasName("PRIMARY");
+            entity.HasKey(e => e.IdEmprendedor).HasName("Pk_emprendedores");
 
             entity.ToTable("emprendedores");
 
@@ -163,10 +166,10 @@ public partial class CentroEmpContext : DbContext
             entity.HasIndex(e => e.Ruc, "ruc").IsUnique();
 
             entity.Property(e => e.IdEmprendedor)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_emprendedor");
             entity.Property(e => e.AnoCreacionEmpresa)
-                .HasColumnType("year(4)")
+                .HasColumnType("smallint")
                 .HasColumnName("ano_creacion_empresa");
             entity.Property(e => e.Cedula)
                 .HasMaxLength(10)
@@ -181,16 +184,16 @@ public partial class CentroEmpContext : DbContext
                 .HasMaxLength(255)
                 .HasColumnName("direccion");
             entity.Property(e => e.Edad)
-                .HasColumnType("enum('18-25','26-65','65+')")
+                .HasColumnType("nvarchar(10)")
                 .HasColumnName("edad");
             entity.Property(e => e.EmpleadosHombres)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("empleados_hombres");
             entity.Property(e => e.EmpleadosMujeres)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("empleados_mujeres");
             entity.Property(e => e.IdUsuario)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_usuario");
             entity.Property(e => e.NivelEstudio)
                 .HasMaxLength(50)
@@ -205,7 +208,7 @@ public partial class CentroEmpContext : DbContext
                 .HasMaxLength(13)
                 .HasColumnName("ruc");
             entity.Property(e => e.SueldoMensual)
-                .HasColumnType("enum('0-460','460-750','750-1500')")
+                .HasColumnType("nvarchar(10)")
                 .HasColumnName("sueldo_mensual");
             entity.Property(e => e.Telefono)
                 .HasMaxLength(15)
@@ -223,7 +226,7 @@ public partial class CentroEmpContext : DbContext
 
         modelBuilder.Entity<EncuestasIce>(entity =>
         {
-            entity.HasKey(e => e.IdRespuesta).HasName("PRIMARY");
+            entity.HasKey(e => e.IdRespuesta).HasName("Pk_encuestas_ice");
 
             entity.ToTable("encuestas_ice");
 
@@ -232,16 +235,16 @@ public partial class CentroEmpContext : DbContext
             entity.HasIndex(e => e.IdPregunta, "id_pregunta");
 
             entity.Property(e => e.IdRespuesta)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_respuesta");
             entity.Property(e => e.IdEmprendedor)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_emprendedor");
             entity.Property(e => e.IdPregunta)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_pregunta");
             entity.Property(e => e.ValorRespuesta)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("valor_respuesta");
 
             entity.HasOne(d => d.IdEmprendedorNavigation).WithMany(p => p.EncuestasIces)
@@ -257,7 +260,7 @@ public partial class CentroEmpContext : DbContext
 
         modelBuilder.Entity<EncuestasIepm>(entity =>
         {
-            entity.HasKey(e => e.IdRespuesta).HasName("PRIMARY");
+            entity.HasKey(e => e.IdRespuesta).HasName("PK_encuestas_iepm");
 
             entity.ToTable("encuestas_iepm");
 
@@ -266,16 +269,16 @@ public partial class CentroEmpContext : DbContext
             entity.HasIndex(e => e.IdPregunta, "id_pregunta");
 
             entity.Property(e => e.IdRespuesta)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_respuesta");
             entity.Property(e => e.IdEmprendedor)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_emprendedor");
             entity.Property(e => e.IdPregunta)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_pregunta");
             entity.Property(e => e.ValorRespuesta)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("valor_respuesta");
 
             entity.HasOne(d => d.IdEmprendedorNavigation).WithMany(p => p.EncuestasIepms)
@@ -291,12 +294,12 @@ public partial class CentroEmpContext : DbContext
 
         modelBuilder.Entity<Indicadore>(entity =>
         {
-            entity.HasKey(e => e.IdIndicadores).HasName("PRIMARY");
+            entity.HasKey(e => e.IdIndicadores).HasName("Pk_indicadores");
 
             entity.ToTable("indicadores");
 
             entity.Property(e => e.IdIndicadores)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_indicadores");
             entity.Property(e => e.Acciones)
                 .HasMaxLength(250)
@@ -314,17 +317,17 @@ public partial class CentroEmpContext : DbContext
 
         modelBuilder.Entity<PreguntasIce>(entity =>
         {
-            entity.HasKey(e => e.IdPregunta).HasName("PRIMARY");
+            entity.HasKey(e => e.IdPregunta).HasName("PK_preguntas_ice");
 
             entity.ToTable("preguntas_ice");
 
             entity.HasIndex(e => e.IdCompetencia, "id_competencia");
 
             entity.Property(e => e.IdPregunta)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_pregunta");
             entity.Property(e => e.IdCompetencia)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_competencia");
             entity.Property(e => e.TextoPregunta)
                 .HasColumnType("text")
@@ -338,17 +341,17 @@ public partial class CentroEmpContext : DbContext
 
         modelBuilder.Entity<PreguntasIepm>(entity =>
         {
-            entity.HasKey(e => e.IdPregunta).HasName("PRIMARY");
+            entity.HasKey(e => e.IdPregunta).HasName("PK_preguntas_iepm");
 
             entity.ToTable("preguntas_iepm");
 
             entity.HasIndex(e => e.IdDimension, "id_dimension");
 
             entity.Property(e => e.IdPregunta)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_pregunta");
             entity.Property(e => e.IdDimension)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_dimension");
             entity.Property(e => e.TextoPregunta)
                 .HasColumnType("text")
@@ -362,7 +365,7 @@ public partial class CentroEmpContext : DbContext
 
         modelBuilder.Entity<ResultadosIce>(entity =>
         {
-            entity.HasKey(e => e.IdResultado).HasName("PRIMARY");
+            entity.HasKey(e => e.IdResultado).HasName("PK_resultados_ice");
 
             entity.ToTable("resultados_ice");
 
@@ -371,19 +374,19 @@ public partial class CentroEmpContext : DbContext
             entity.HasIndex(e => e.IdEmprendedor, "id_emprendedor");
 
             entity.Property(e => e.IdResultado)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_resultado");
             entity.Property(e => e.IdCompetencia)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_competencia");
             entity.Property(e => e.IdEmprendedor)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_emprendedor");
             entity.Property(e => e.PuntuacionCompetencia)
                 .HasPrecision(6, 5)
                 .HasColumnName("puntuacion_competencia");
             entity.Property(e => e.Valoracion)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("valoracion");
 
             entity.HasOne(d => d.IdCompetenciaNavigation).WithMany(p => p.ResultadosIces)
@@ -399,7 +402,7 @@ public partial class CentroEmpContext : DbContext
 
         modelBuilder.Entity<ResultadosIepm>(entity =>
         {
-            entity.HasKey(e => e.IdResultado).HasName("PRIMARY");
+            entity.HasKey(e => e.IdResultado).HasName("PK_resultados_iepm");
 
             entity.ToTable("resultados_iepm");
 
@@ -408,13 +411,13 @@ public partial class CentroEmpContext : DbContext
             entity.HasIndex(e => e.IdEmprendedor, "id_emprendedor");
 
             entity.Property(e => e.IdResultado)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_resultado");
             entity.Property(e => e.IdDimension)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_dimension");
             entity.Property(e => e.IdEmprendedor)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_emprendedor");
             entity.Property(e => e.PuntuacionDimension)
                 .HasPrecision(6, 5)
@@ -433,7 +436,7 @@ public partial class CentroEmpContext : DbContext
 
         modelBuilder.Entity<ResumenIce>(entity =>
         {
-            entity.HasKey(e => e.IdEmprendedor).HasName("PRIMARY");
+            entity.HasKey(e => e.IdEmprendedor).HasName("PK_resumen_ice");
 
             entity.ToTable("resumen_ice");
 
@@ -441,10 +444,10 @@ public partial class CentroEmpContext : DbContext
 
             entity.Property(e => e.IdEmprendedor)
                 .ValueGeneratedNever()
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_emprendedor");
             entity.Property(e => e.IdIndicadores)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_indicadores");
             entity.Property(e => e.ValorIceTotal)
                 .HasPrecision(6, 5)
@@ -462,7 +465,7 @@ public partial class CentroEmpContext : DbContext
 
         modelBuilder.Entity<ResumenIepm>(entity =>
         {
-            entity.HasKey(e => e.IdEmprendedor).HasName("PRIMARY");
+            entity.HasKey(e => e.IdEmprendedor).HasName("Pk_resumen_iepm");
 
             entity.ToTable("resumen_iepm");
 
@@ -470,10 +473,10 @@ public partial class CentroEmpContext : DbContext
 
             entity.Property(e => e.IdEmprendedor)
                 .ValueGeneratedNever()
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_emprendedor");
             entity.Property(e => e.IdAccionesIepm)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_accionesIEPM");
             entity.Property(e => e.ValorIepmTotal)
                 .HasPrecision(6, 5)
@@ -491,14 +494,14 @@ public partial class CentroEmpContext : DbContext
 
         modelBuilder.Entity<Usuario>(entity =>
         {
-            entity.HasKey(e => e.IdUsuario).HasName("PRIMARY");
+            entity.HasKey(e => e.IdUsuario).HasName("PK_usuarios");
 
             entity.ToTable("usuarios");
 
             entity.HasIndex(e => e.Correo, "correo").IsUnique();
 
             entity.Property(e => e.IdUsuario)
-                .HasColumnType("int(11)")
+                .HasColumnType("int")
                 .HasColumnName("id_usuario");
             entity.Property(e => e.Contraseña)
                 .HasMaxLength(255)
@@ -514,7 +517,7 @@ public partial class CentroEmpContext : DbContext
                 .HasMaxLength(100)
                 .HasColumnName("nombre");
             entity.Property(e => e.TipoUsuario)
-                .HasColumnType("enum('Administrador','Reportes')")
+                .HasColumnType("nvarchar(10)")
                 .HasColumnName("tipo_usuario");
         });
 
