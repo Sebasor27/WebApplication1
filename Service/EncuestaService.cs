@@ -55,66 +55,69 @@ public class EncuestaService
         }
     }
 
-    public async Task calcularIceTotal(int emprendedorId)
+    public async Task CalcularIceTotal(int emprendedorId)
+{
+    try
     {
-        try
+        // Obtener los resultados de las competencias del emprendedor
+        var resultados = await _context.ResultadosIces
+                                            .Where(r => r.IdEmprendedor == emprendedorId)
+                                            .ToListAsync();
+
+        // Calcular el ICE total sumando las puntuaciones de las competencias
+        double valorIceTotal = (double)resultados.Sum(r => r.PuntuacionCompetencia);
+
+        // Obtener todos los indicadores de la base de datos
+        var indicadores = await _context.Indicadores.ToListAsync();
+
+        // Buscar el indicador cuyo rango contiene el valorIceTotal
+        var indicadorEncontrado = indicadores.FirstOrDefault(indicador => 
         {
-            
-            // Obtener los resultados de las competencias del emprendedor
-            var resultados = await _context.ResultadosIces
-                                                .Where(r => r.IdEmprendedor == emprendedorId)
-                                                .ToListAsync();
-    
-                var ValoriceTotal = resultados.Sum(r => r.PuntuacionCompetencia);
-    
-                var emprendedor = await _context.Emprendedores.FindAsync(emprendedorId);
-    
-                var nuevoResumenIce = new ResumenIce
-                {
-                    IdEmprendedor = emprendedorId,
-                    ValorIceTotal = ValoriceTotal
-                };
+            if (string.IsNullOrEmpty(indicador.Rango))
+                return false;
 
-                await _context.ResumenIces.AddAsync(nuevoResumenIce);
-    
-                await _context.SaveChangesAsync();
-            // calcular indicador en rango de valorice total
-            var indicadores = _context.Indicadores.ToList();
-            var indicadorEncontrado = indicadores.FirstOrDefault(indicador => {
-                var rango = indicador.Rango?.Trim('[',')') ?? string.Empty;
-                var limite = (indicador.Rango ?? string.Empty).Split("-");
+            // Limpiar el rango y dividirlo en límites
+            var rango = indicador.Rango.Trim('[', ']', '(', ')');
+            var limites = rango.Split('-');
 
-                double rangoInicio = double.Parse(limite[0].Trim(), CultureInfo.InvariantCulture);
-                double rangoFin = double.Parse(limite[1].Trim(), CultureInfo.InvariantCulture);
+            if (limites.Length != 2)
+                return false;
 
-                return (double)ValoriceTotal >= rangoInicio && (double)ValoriceTotal < rangoFin;
-            });
-            if (indicadorEncontrado != null)
-            {
-                var resumenIce = new ResumenIce
-                {
-                    IdEmprendedor = emprendedorId,
-                    ValorIceTotal = ValoriceTotal,
-                    IdIndicadores = indicadorEncontrado.IdIndicadores
-                };
-                await _context.ResumenIces.AddAsync(resumenIce);
-                await _context.SaveChangesAsync();
+            // Convertir los límites a double
+            double rangoInicio = double.Parse(limites[0].Trim(), CultureInfo.InvariantCulture);
+            double rangoFin = double.Parse(limites[1].Trim(), CultureInfo.InvariantCulture);
 
-                Console.WriteLine("Indicador encontrado: ", indicadorEncontrado);
-            }else {
-                Console.WriteLine("Indicador no encontrado");
-            }
-            
+            // Verificar si el valorIceTotal está dentro del rango
+            return valorIceTotal >= rangoInicio && valorIceTotal < rangoFin;
+        });
 
+        // Crear el resumen ICE
+        var resumenIce = new ResumenIce
+        {
+            IdEmprendedor = emprendedorId,
+            ValorIceTotal = (decimal)valorIceTotal,
+            IdIndicadores = indicadorEncontrado?.IdIndicadores // Asignar el id_indicadores si se encuentra
+        };
 
+        // Guardar el resumen ICE en la base de datos
+        await _context.ResumenIces.AddAsync(resumenIce);
+        await _context.SaveChangesAsync();
+
+        // Mostrar el resultado en consola
+        if (indicadorEncontrado != null)
+        {
+            Console.WriteLine($"Indicador encontrado: {indicadorEncontrado.Valoracion} (ID: {indicadorEncontrado.IdIndicadores})");
         }
-        catch(Exception ex)
+        else
         {
-            throw new ApplicationException("Error al calcular el ICE total", ex);
+            Console.WriteLine("Indicador no encontrado para el ICE total calculado.");
         }
     }
-
-
+    catch (Exception ex)
+    {
+        throw new ApplicationException("Error al calcular el ICE total", ex);
+    }
+}
     private decimal CalcularPuntuacionCompetencia(int valoracion, int puntosMaximos, decimal pesoRelativo)
     {
         // Fórmula: (peso_relativo / puntos_maximos) * valoracion

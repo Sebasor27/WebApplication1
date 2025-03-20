@@ -511,7 +511,7 @@ public partial class CentroEmpContext : DbContext
                 .HasColumnName("correo");
             entity.Property(e => e.FechaCreacion)
                 .HasDefaultValueSql("current_timestamp()")
-                .HasColumnType("timestamp")
+                .HasColumnType("datetime")
                 .HasColumnName("fecha_creacion");
             entity.Property(e => e.Nombre)
                 .HasMaxLength(100)

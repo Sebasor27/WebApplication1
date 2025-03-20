@@ -27,7 +27,7 @@ namespace WebApplication1.Controllers
         public async Task<IActionResult> calcularIceTotal(int emprendedorId)
         {
             // Llamar al servicio para calcular la puntuación
-            await _encuestaService.calcularIceTotal(emprendedorId);
+            await _encuestaService.CalcularIceTotal(emprendedorId);
 
             // Retornar una respuesta de éxito
             return Ok(new { message = "Puntuación calculada y guardada correctamente" });

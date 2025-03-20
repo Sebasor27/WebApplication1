@@ -72,8 +72,6 @@ namespace WebApplication1.Controllers
             return NoContent();
         }
 
-        // POST: api/Usuario
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public IActionResult CrearUsuario([FromBody] Usuario usuario)
         {
@@ -84,15 +82,35 @@ namespace WebApplication1.Controllers
 
             try
             {
-                // Aquí no hacemos nada con Emprendedores porque es opcional.
+                // Agregar el usuario al contexto
                 _context.Usuarios.Add(usuario);
+
+                // Guardar los cambios en la base de datos
                 _context.SaveChanges();
 
-                return Ok(usuario); // Devuelve el usuario creado
+                // Devolver el usuario creado
+                return Ok(usuario);
             }
-            catch (Exception ex)
+            catch (DbUpdateException dbEx) // Captura excepciones específicas de EF
             {
-                return StatusCode(500, $"Error interno del servidor: {ex.Message}");
+                // Capturar la excepción interna
+                var innerException = dbEx.InnerException;
+
+                // Registrar el error interno
+                Console.WriteLine("Error interno al guardar el usuario:");
+                Console.WriteLine(innerException?.Message);
+
+                // Devolver un mensaje de error detallado
+                return StatusCode(500, $"Error interno del servidor al guardar el usuario: {innerException?.Message}");
+            }
+            catch (Exception ex) // Captura cualquier otra excepción
+            {
+                // Registrar el error
+                Console.WriteLine("Error inesperado:");
+                Console.WriteLine(ex.Message);
+
+                // Devolver un mensaje de error genérico
+                return StatusCode(500, $"Error inesperado: {ex.Message}");
             }
         }
 
