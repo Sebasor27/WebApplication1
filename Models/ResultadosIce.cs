@@ -12,8 +12,8 @@ public partial class ResultadosIce
     public int IdCompetencia { get; set; }
 
     public int Valoracion { get; set; }
-
     public decimal PuntuacionCompetencia { get; set; }
+    public int IdEncuesta { get; set; }
 
     public virtual Competencia IdCompetenciaNavigation { get; set; } = null!;
 

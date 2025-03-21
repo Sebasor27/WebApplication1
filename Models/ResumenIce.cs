@@ -10,6 +10,7 @@ public partial class ResumenIce
     public decimal ValorIceTotal { get; set; }
 
     public int? IdIndicadores { get; set; }
+    public int IdEncuesta { get; set; }
 
     public virtual Emprendedore IdEmprendedorNavigation { get; set; } = null!;
 

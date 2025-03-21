@@ -1,10 +1,9 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using WebApplication1.Models;
 
 namespace WebApplication1.Controllers
@@ -13,85 +12,42 @@ namespace WebApplication1.Controllers
     [ApiController]
     public class EncuestasIceController : ControllerBase
     {
-        private readonly CentroEmpContext _context;
+        private readonly EncuestaService _encuestaService;
 
-        public EncuestasIceController(CentroEmpContext context)
+        // Inyectamos EncuestaService a través del constructor
+        public EncuestasIceController(EncuestaService encuestaService)
         {
-            _context = context;
+            _encuestaService = encuestaService;
         }
 
-        // GET: api/EncuestasIce
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<EncuestasIce>>> GetEncuestasIces()
+        // POST: api/EncuestasIce/crear-encuesta
+        [HttpPost("crear-encuesta")]
+        public async Task<IActionResult> CrearEncuesta(int emprendedorId)
         {
-            return await _context.EncuestasIces.ToListAsync();
-        }
-
-        // GET: api/EncuestasIce/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<EncuestasIce>> GetEncuestasIce(int id)
-        {
-            var encuestasIce = await _context.EncuestasIces.FindAsync(id);
-
-            if (encuestasIce == null)
-            {
-                return NotFound();
-            }
-
-            return encuestasIce;
-        }
-
-        // PUT: api/EncuestasIce/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutEncuestasIce(int id, EncuestasIce encuestasIce)
-        {
-            if (id != encuestasIce.IdRespuesta)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(encuestasIce).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
+                int idEncuesta = await _encuestaService.CrearNuevaEncuesta(emprendedorId);
+                return Ok(new { idEncuesta = idEncuesta, message = "Encuesta creada correctamente" });
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception ex)
             {
-                if (!EncuestasIceExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return StatusCode(500, $"Error al crear la encuesta: {ex.Message}");
             }
-
-            return NoContent();
         }
 
-        // POST: api/EncuestasIce
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<IEnumerable<EncuestasIce>>> PostEncuestasIce([FromBody] List<EncuestasIce> encuestasIce)
+        // POST: api/EncuestasIce/guardar-respuestas
+        [HttpPost("guardar-respuestas")]
+        public async Task<IActionResult> GuardarRespuestas(int emprendedorId, int idEncuesta, List<EncuestasIce> respuestas)
         {
-            if (encuestasIce == null || !encuestasIce.Any())
+            try
             {
-                return BadRequest("No se han enviado respuestas.");
+                await _encuestaService.GuardarRespuestasEncuesta(emprendedorId, idEncuesta, respuestas);
+                return Ok(new { message = "Respuestas guardadas correctamente" });
             }
-
-            _context.EncuestasIces.AddRange(encuestasIce);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetEncuestasIce", new { id = encuestasIce.First().IdRespuesta }, encuestasIce);
-        }
-
-
-        private bool EncuestasIceExists(int id)
-        {
-            return _context.EncuestasIces.Any(e => e.IdRespuesta == id);
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error al guardar las respuestas: {ex.Message}");
+            }
         }
     }
 }

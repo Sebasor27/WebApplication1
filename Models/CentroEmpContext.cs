@@ -225,38 +225,42 @@ public partial class CentroEmpContext : DbContext
         });
 
         modelBuilder.Entity<EncuestasIce>(entity =>
-        {
-            entity.HasKey(e => e.IdRespuesta).HasName("Pk_encuestas_ice");
+{
+    entity.HasKey(e => e.IdRespuesta).HasName("Pk_encuestas_ice");
 
-            entity.ToTable("encuestas_ice");
+    entity.ToTable("encuestas_ice");
 
-            entity.HasIndex(e => e.IdEmprendedor, "id_emprendedor");
+    entity.HasIndex(e => e.IdEmprendedor, "id_emprendedor");
+    entity.HasIndex(e => e.IdPregunta, "id_pregunta");
+    entity.HasIndex(e => e.IdEncuesta, "id_encuesta"); // Índice para id_encuesta
 
-            entity.HasIndex(e => e.IdPregunta, "id_pregunta");
+    entity.Property(e => e.IdRespuesta)
+        .HasColumnType("int")
+        .HasColumnName("id_respuesta");
+    entity.Property(e => e.IdEmprendedor)
+        .HasColumnType("int")
+        .HasColumnName("id_emprendedor");
+    entity.Property(e => e.IdPregunta)
+        .HasColumnType("int")
+        .HasColumnName("id_pregunta");
+    entity.Property(e => e.ValorRespuesta)
+        .HasColumnType("int")
+        .HasColumnName("valor_respuesta");
+    entity.Property(e => e.IdEncuesta) // Nueva propiedad
+        .HasColumnType("int")
+        .HasColumnName("id_encuesta")
+        .HasDefaultValue(1);
 
-            entity.Property(e => e.IdRespuesta)
-                .HasColumnType("int")
-                .HasColumnName("id_respuesta");
-            entity.Property(e => e.IdEmprendedor)
-                .HasColumnType("int")
-                .HasColumnName("id_emprendedor");
-            entity.Property(e => e.IdPregunta)
-                .HasColumnType("int")
-                .HasColumnName("id_pregunta");
-            entity.Property(e => e.ValorRespuesta)
-                .HasColumnType("int")
-                .HasColumnName("valor_respuesta");
+    entity.HasOne(d => d.IdEmprendedorNavigation).WithMany(p => p.EncuestasIces)
+        .HasForeignKey(d => d.IdEmprendedor)
+        .OnDelete(DeleteBehavior.ClientSetNull)
+        .HasConstraintName("encuestas_ice_ibfk_1");
 
-            entity.HasOne(d => d.IdEmprendedorNavigation).WithMany(p => p.EncuestasIces)
-                .HasForeignKey(d => d.IdEmprendedor)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("encuestas_ice_ibfk_1");
-
-            entity.HasOne(d => d.IdPreguntaNavigation).WithMany(p => p.EncuestasIces)
-                .HasForeignKey(d => d.IdPregunta)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("encuestas_ice_ibfk_2");
-        });
+    entity.HasOne(d => d.IdPreguntaNavigation).WithMany(p => p.EncuestasIces)
+        .HasForeignKey(d => d.IdPregunta)
+        .OnDelete(DeleteBehavior.ClientSetNull)
+        .HasConstraintName("encuestas_ice_ibfk_2");
+});
 
         modelBuilder.Entity<EncuestasIepm>(entity =>
         {
@@ -388,6 +392,10 @@ public partial class CentroEmpContext : DbContext
             entity.Property(e => e.Valoracion)
                 .HasColumnType("int")
                 .HasColumnName("valoracion");
+            entity.Property(e => e.IdEncuesta) // Nueva columna
+                .HasColumnType("int")
+                .HasColumnName("id_encuesta")
+                .HasDefaultValue(1);
 
             entity.HasOne(d => d.IdCompetenciaNavigation).WithMany(p => p.ResultadosIces)
                 .HasForeignKey(d => d.IdCompetencia)
@@ -452,6 +460,10 @@ public partial class CentroEmpContext : DbContext
             entity.Property(e => e.ValorIceTotal)
                 .HasPrecision(6, 5)
                 .HasColumnName("valor_ice_total");
+            entity.Property(e => e.IdEncuesta) // Nueva columna
+                .HasColumnType("int")
+                .HasColumnName("id_encuesta")
+                .HasDefaultValue(0);
 
             entity.HasOne(d => d.IdEmprendedorNavigation).WithOne(p => p.ResumenIce)
                 .HasForeignKey<ResumenIce>(d => d.IdEmprendedor)
