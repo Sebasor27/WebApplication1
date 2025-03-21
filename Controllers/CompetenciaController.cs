@@ -1,15 +1,15 @@
-using System;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using WebApplication1.Models;
 
 namespace WebApplication1.Controllers
 {
-    public class CompetenciaController : Controller
+    [Route("api/[controller]")]
+    [ApiController]
+    public class CompetenciaController : ControllerBase
     {
         private readonly CentroEmpContext _context;
 
@@ -18,134 +18,81 @@ namespace WebApplication1.Controllers
             _context = context;
         }
 
-        // GET: Competencia
-        public async Task<IActionResult> Index()
+        // GET: api/Competencia
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Competencia>>> GetCompetencias()
         {
-            return View(await _context.Competencias.ToListAsync());
+            return await _context.Competencias.ToListAsync();
         }
 
-        // GET: Competencia/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // GET: api/Competencia/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Competencia>> GetCompetencia(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var competencia = await _context.Competencias
-                .FirstOrDefaultAsync(m => m.IdCompetencia == id);
-            if (competencia == null)
-            {
-                return NotFound();
-            }
-
-            return View(competencia);
-        }
-
-        // GET: Competencia/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Competencia/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("IdCompetencia,NombreCompetencia,PuntosMaximos,PesoRelativo")] Competencia competencia)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(competencia);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(competencia);
-        }
-
-        // GET: Competencia/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
             var competencia = await _context.Competencias.FindAsync(id);
+
             if (competencia == null)
             {
                 return NotFound();
             }
-            return View(competencia);
+
+            return competencia;
         }
 
-        // POST: Competencia/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // POST: api/Competencia
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("IdCompetencia,NombreCompetencia,PuntosMaximos,PesoRelativo")] Competencia competencia)
+        public async Task<ActionResult<Competencia>> PostCompetencia(Competencia competencia)
+        {
+            _context.Competencias.Add(competencia);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetCompetencia), new { id = competencia.IdCompetencia }, competencia);
+        }
+
+        // PUT: api/Competencia/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutCompetencia(int id, Competencia competencia)
         {
             if (id != competencia.IdCompetencia)
             {
-                return NotFound();
+                return BadRequest();
             }
 
-            if (ModelState.IsValid)
+            _context.Entry(competencia).State = EntityState.Modified;
+
+            try
             {
-                try
-                {
-                    _context.Update(competencia);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!CompetenciaExists(competencia.IdCompetencia))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                await _context.SaveChangesAsync();
             }
-            return View(competencia);
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!CompetenciaExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
         }
 
-        // GET: Competencia/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        // DELETE: api/Competencia/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteCompetencia(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var competencia = await _context.Competencias
-                .FirstOrDefaultAsync(m => m.IdCompetencia == id);
+            var competencia = await _context.Competencias.FindAsync(id);
             if (competencia == null)
             {
                 return NotFound();
             }
 
-            return View(competencia);
-        }
-
-        // POST: Competencia/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var competencia = await _context.Competencias.FindAsync(id);
-            if (competencia != null)
-            {
-                _context.Competencias.Remove(competencia);
-            }
-
+            _context.Competencias.Remove(competencia);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            return NoContent();
         }
 
         private bool CompetenciaExists(int id)
