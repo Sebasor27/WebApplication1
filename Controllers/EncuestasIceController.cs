@@ -14,39 +14,33 @@ namespace WebApplication1.Controllers
     {
         private readonly EncuestaService _encuestaService;
 
-        // Inyectamos EncuestaService a través del constructor
         public EncuestasIceController(EncuestaService encuestaService)
         {
             _encuestaService = encuestaService;
         }
 
-        // POST: api/EncuestasIce/crear-encuesta
-        [HttpPost("crear-encuesta")]
-        public async Task<IActionResult> CrearEncuesta(int emprendedorId)
+        [HttpPost("procesar-encuesta")]
+        public async Task<IActionResult> ProcesarEncuesta(int emprendedorId, List<EncuestasIce> respuestas)
         {
             try
             {
                 int idEncuesta = await _encuestaService.CrearNuevaEncuesta(emprendedorId);
-                return Ok(new { idEncuesta = idEncuesta, message = "Encuesta creada correctamente" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error al crear la encuesta: {ex.Message}");
-            }
-        }
 
-        // POST: api/EncuestasIce/guardar-respuestas
-        [HttpPost("guardar-respuestas")]
-        public async Task<IActionResult> GuardarRespuestas(int emprendedorId, int idEncuesta, List<EncuestasIce> respuestas)
-        {
-            try
-            {
                 await _encuestaService.GuardarRespuestasEncuesta(emprendedorId, idEncuesta, respuestas);
-                return Ok(new { message = "Respuestas guardadas correctamente" });
+
+                await _encuestaService.CalcularYGuardarPuntuacionCompetencia(emprendedorId, idEncuesta);
+
+                await _encuestaService.CalcularIceTotal(emprendedorId, idEncuesta);
+
+                return Ok(new 
+                { 
+                    idEncuesta = idEncuesta, 
+                    message = "Encuesta procesada correctamente, respuestas guardadas, puntuación calculada y ICE total calculado." 
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error al guardar las respuestas: {ex.Message}");
+                return StatusCode(500, $"Error al procesar la encuesta: {ex.Message}");
             }
         }
     }

@@ -10,13 +10,11 @@ namespace WebApplication1.Controllers
     {
         private readonly EncuestaService _encuestaService;
 
-        // Inyectamos EncuestaService a través del constructor
         public EncuestaController(EncuestaService encuestaService)
         {
             _encuestaService = encuestaService;
         }
 
-        // Endpoint para calcular y guardar la puntuación de la competencia
         [HttpPost("calcular-puntuacion")]
         public async Task<IActionResult> CalcularPuntuacionCompetencia(int emprendedorId, int idEncuesta)
         {
@@ -31,7 +29,6 @@ namespace WebApplication1.Controllers
             }
         }
 
-        // Endpoint para calcular el ICE total
         [HttpPost("calcular-ice-total")]
         public async Task<IActionResult> CalcularIceTotal(int emprendedorId, int idEncuesta)
         {
@@ -45,7 +42,6 @@ namespace WebApplication1.Controllers
                 return StatusCode(500, $"Error al calcular el ICE total: {ex.Message}");
             }
         }
-        // GET: api/EncuestasIce/encuestas/{emprendedorId}
         [HttpGet("encuestas/{emprendedorId}")]
         public async Task<IActionResult> ObtenerEncuestas(int emprendedorId)
         {
@@ -60,7 +56,6 @@ namespace WebApplication1.Controllers
             }
         }
 
-        // GET: api/EncuestasIce/resultados-resumen/{emprendedorId}/{idEncuesta}
         [HttpGet("resultados-resumen/{emprendedorId}/{idEncuesta}")]
         public async Task<IActionResult> ObtenerResultadosYResumen(int emprendedorId, int idEncuesta)
         {

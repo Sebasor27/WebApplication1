@@ -150,8 +150,8 @@ public class EncuestaService
             {
                 IdEmprendedor = emprendedorId,
                 ValorIceTotal = (decimal)valorIceTotal,
-                IdIndicadores = indicadorEncontrado?.IdIndicadores, // Asignar el id_indicadores si se encuentra
-                IdEncuesta = idEncuesta // Vincular el resumen a la encuesta específica
+                IdIndicadores = indicadorEncontrado?.IdIndicadores, 
+                IdEncuesta = idEncuesta 
             };
 
             await _context.ResumenIces.AddAsync(resumenIce);
