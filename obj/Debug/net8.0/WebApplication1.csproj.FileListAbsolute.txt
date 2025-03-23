@@ -1,5 +1,6 @@
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/appsettings.Development.json
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/appsettings.json
+/mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/WebApplication1.staticwebassets.runtime.json
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/WebApplication1
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/WebApplication1.deps.json
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/WebApplication1.runtimeconfig.json
@@ -7,7 +8,11 @@
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/WebApplication1.pdb
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/Azure.Core.dll
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/Azure.Identity.dll
+/mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/BouncyCastle.Cryptography.dll
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/Humanizer.dll
+/mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/MailKit.dll
+/mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
+/mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/Microsoft.AspNetCore.Identity.UI.dll
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/Microsoft.AspNetCore.OpenApi.dll
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/Microsoft.AspNetCore.Razor.Language.dll
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/Microsoft.Bcl.AsyncInterfaces.dll
@@ -51,6 +56,7 @@
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/Microsoft.VisualStudio.Web.CodeGeneration.Utils.dll
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/Microsoft.VisualStudio.Web.CodeGenerators.Mvc.dll
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/Microsoft.Win32.SystemEvents.dll
+/mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/MimeKit.dll
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/Mono.TextTemplating.dll
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/MySqlConnector.dll
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/Newtonsoft.Json.dll
@@ -79,6 +85,7 @@
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/System.Memory.Data.dll
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/System.Reflection.MetadataLoadContext.dll
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/System.Runtime.Caching.dll
+/mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/System.Security.Cryptography.Pkcs.dll
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/System.Security.Cryptography.ProtectedData.dll
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/System.Security.Permissions.dll
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/System.Windows.Extensions.dll
@@ -230,6 +237,7 @@
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/runtimes/win/lib/net7.0/Microsoft.Win32.SystemEvents.dll
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/runtimes/win/lib/net7.0/System.Drawing.Common.dll
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Runtime.Caching.dll
+/mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/runtimes/win/lib/net8.0/System.Security.Cryptography.Pkcs.dll
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/runtimes/win/lib/net7.0/System.Security.Cryptography.ProtectedData.dll
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/bin/Debug/net8.0/runtimes/win/lib/net7.0/System.Windows.Extensions.dll
 /mnt/volumen/sebas/Programas/programa 1/WebApplication1/obj/Debug/net8.0/WebApplication1.csproj.AssemblyReference.cache

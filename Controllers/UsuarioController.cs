@@ -1,138 +1,116 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using WebApplication1.Models;
 
-namespace WebApplication1.Controllers
+[Route("api/[controller]")]
+[ApiController]
+public class UsuarioController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class UsuarioController : ControllerBase
+    private readonly CentroEmpContext _context;
+    private readonly IConfiguration _configuration;
+
+    public UsuarioController(CentroEmpContext context, IConfiguration configuration)
     {
-        private readonly CentroEmpContext _context;
+        _context = context;
+        _configuration = configuration;
+    }
 
-        public UsuarioController(CentroEmpContext context)
+[HttpPost("login")]
+public async Task<IActionResult> Login([FromBody] LoginRequest request)
+{
+    if (string.IsNullOrEmpty(request.nombre) || string.IsNullOrEmpty(request.Contraseña))
+    {
+        return BadRequest("El nombre de usuario/correo y la contraseña son obligatorios.");
+    }
+
+    var usuario = await _context.Usuarios
+        .FirstOrDefaultAsync(u => 
+            (u.Nombre == request.nombre || u.Correo == request.nombre) && 
+            u.Contraseña == request.Contraseña);
+
+    if (usuario == null)
+    {
+        return Unauthorized("Credenciales inválidas.");
+    }
+
+    if (usuario.TipoUsuario != "admin" && usuario.TipoUsuario != "reporteria")
+    {
+        return Unauthorized("Rol no válido.");
+    }
+
+    var token = GenerateJwtToken(usuario);
+    return Ok(new { Token = token });
+}
+
+private string GenerateJwtToken(Usuario usuario)
+{
+    var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]));
+    var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+    var claims = new[]
+    {
+        new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
+        new Claim(ClaimTypes.Email, usuario.Correo),
+        new Claim("TipoUsuario", usuario.TipoUsuario)
+    };
+
+    var token = new JwtSecurityToken(
+        issuer: _configuration["Jwt:Issuer"],
+        audience: _configuration["Jwt:Audience"],
+        claims: claims,
+        expires: DateTime.Now.AddHours(1),
+        signingCredentials: credentials
+    );
+
+    return new JwtSecurityTokenHandler().WriteToken(token);
+}
+
+
+    [HttpPost("recuperar-contrasena")]
+    public async Task<IActionResult> RecuperarContrasena([FromBody] RecuperarContrasenaRequest request)
+    {
+        if (string.IsNullOrEmpty(request.Correo))
         {
-            _context = context;
+            return BadRequest("El correo electrónico no puede ser nulo o vacío.");
         }
 
-        // GET: api/Usuario
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Usuario>>> GetUsuarios()
+        var usuario = await _context.Usuarios
+            .FirstOrDefaultAsync(u => u.Correo == request.Correo);
+
+        if (usuario == null)
         {
-            return await _context.Usuarios.ToListAsync();
+            return NotFound("Correo no registrado.");
         }
 
-        // GET: api/Usuario/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Usuario>> GetUsuario(int id)
+        if (string.IsNullOrEmpty(usuario.Correo))
         {
-            var usuario = await _context.Usuarios.FindAsync(id);
-
-            if (usuario == null)
-            {
-                return NotFound();
-            }
-
-            return usuario;
+            return BadRequest("El correo electrónico del usuario no está configurado.");
         }
 
-        // PUT: api/Usuario/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUsuario(int id, Usuario usuario)
-        {
-            if (id != usuario.IdUsuario)
-            {
-                return BadRequest();
-            }
+        var emailService = new EmailService(_configuration);
+        var subject = "Recuperación de contraseña";
+        var body = $"Su nombre de usuario es: {usuario.Nombre}\nSu contraseña es: {usuario.Contraseña}";
 
-            _context.Entry(usuario).State = EntityState.Modified;
+        emailService.SendEmail(usuario.Correo, subject, body);
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UsuarioExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+        return Ok("Se ha enviado un correo con sus credenciales.");
+    }
 
-            return NoContent();
-        }
-
-        [HttpPost]
-        public IActionResult CrearUsuario([FromBody] Usuario usuario)
-        {
-            if (usuario == null)
-            {
-                return BadRequest("El usuario no puede ser nulo.");
-            }
-
-            try
-            {
-                // Agregar el usuario al contexto
-                _context.Usuarios.Add(usuario);
-
-                // Guardar los cambios en la base de datos
-                _context.SaveChanges();
-
-                // Devolver el usuario creado
-                return Ok(usuario);
-            }
-            catch (DbUpdateException dbEx) // Captura excepciones específicas de EF
-            {
-                // Capturar la excepción interna
-                var innerException = dbEx.InnerException;
-
-                // Registrar el error interno
-                Console.WriteLine("Error interno al guardar el usuario:");
-                Console.WriteLine(innerException?.Message);
-
-                // Devolver un mensaje de error detallado
-                return StatusCode(500, $"Error interno del servidor al guardar el usuario: {innerException?.Message}");
-            }
-            catch (Exception ex) // Captura cualquier otra excepción
-            {
-                // Registrar el error
-                Console.WriteLine("Error inesperado:");
-                Console.WriteLine(ex.Message);
-
-                // Devolver un mensaje de error genérico
-                return StatusCode(500, $"Error inesperado: {ex.Message}");
-            }
-        }
-
-        // DELETE: api/Usuario/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUsuario(int id)
-        {
-            var usuario = await _context.Usuarios.FindAsync(id);
-            if (usuario == null)
-            {
-                return NotFound();
-            }
-
-            _context.Usuarios.Remove(usuario);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool UsuarioExists(int id)
-        {
-            return _context.Usuarios.Any(e => e.IdUsuario == id);
-        }
+    public class RecuperarContrasenaRequest
+    {
+        public required string Correo { get; set; }
     }
 }
+
+public class LoginRequest
+{
+    public string nombre { get; set; }
+    public required string Contraseña { get; set; }
+}
+
+

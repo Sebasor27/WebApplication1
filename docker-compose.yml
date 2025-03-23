@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:latest
+    container_name: sqlserver
+    environment:
+      SA_PASSWORD: "TuContraseñaFuerte123" # Cambia esto por tu contraseña
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    networks:
+      - app-network
+
+  webapp:
+    image: webapp # Nombre de la imagen de tu aplicación .NET
+    container_name: webapp
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      ConnectionStrings__ApplicationDbContext: "Server=sqlserver;Database=centroEmp;User Id=sa;Password=TuContraseñaFuerte123;TrustServerCertificate=True;"
+    ports:
+      - "5000:80"
+    depends_on:
+      - sqlserver
+    networks:
+      - app-network
+
+volumes:
+  sqlserver-data:
+
+networks:
+  app-network:
