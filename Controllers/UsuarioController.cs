@@ -20,55 +20,55 @@ public class UsuarioController : ControllerBase
         _configuration = configuration;
     }
 
-[HttpPost("login")]
-public async Task<IActionResult> Login([FromBody] LoginRequest request)
-{
-    if (string.IsNullOrEmpty(request.nombre) || string.IsNullOrEmpty(request.Contraseña))
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        return BadRequest("El nombre de usuario/correo y la contraseña son obligatorios.");
+        if (string.IsNullOrEmpty(request.nombre) || string.IsNullOrEmpty(request.Contraseña))
+        {
+            return BadRequest("El nombre de usuario/correo y la contraseña son obligatorios.");
+        }
+
+        var usuario = await _context.Usuarios
+            .FirstOrDefaultAsync(u =>
+                (u.Nombre == request.nombre || u.Correo == request.nombre) &&
+                u.Contraseña == request.Contraseña);
+
+        if (usuario == null)
+        {
+            return Unauthorized("Credenciales inválidas.");
+        }
+
+        if (usuario.TipoUsuario != "admin" && usuario.TipoUsuario != "reporteria")
+        {
+            return Unauthorized("Rol no válido.");
+        }
+
+        var token = GenerateJwtToken(usuario);
+        return Ok(new { Token = token });
     }
 
-    var usuario = await _context.Usuarios
-        .FirstOrDefaultAsync(u => 
-            (u.Nombre == request.nombre || u.Correo == request.nombre) && 
-            u.Contraseña == request.Contraseña);
-
-    if (usuario == null)
+    private string GenerateJwtToken(Usuario usuario)
     {
-        return Unauthorized("Credenciales inválidas.");
-    }
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]));
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-    if (usuario.TipoUsuario != "admin" && usuario.TipoUsuario != "reporteria")
-    {
-        return Unauthorized("Rol no válido.");
-    }
-
-    var token = GenerateJwtToken(usuario);
-    return Ok(new { Token = token });
-}
-
-private string GenerateJwtToken(Usuario usuario)
-{
-    var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]));
-    var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-    var claims = new[]
-    {
+        var claims = new[]
+        {
         new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
         new Claim(ClaimTypes.Email, usuario.Correo),
         new Claim("TipoUsuario", usuario.TipoUsuario)
     };
 
-    var token = new JwtSecurityToken(
-        issuer: _configuration["Jwt:Issuer"],
-        audience: _configuration["Jwt:Audience"],
-        claims: claims,
-        expires: DateTime.Now.AddHours(1),
-        signingCredentials: credentials
-    );
+        var token = new JwtSecurityToken(
+            issuer: _configuration["Jwt:Issuer"],
+            audience: _configuration["Jwt:Audience"],
+            claims: claims,
+            expires: DateTime.Now.AddHours(1),
+            signingCredentials: credentials
+        );
 
-    return new JwtSecurityTokenHandler().WriteToken(token);
-}
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
 
 
     [HttpPost("recuperar-contrasena")]
@@ -99,6 +99,37 @@ private string GenerateJwtToken(Usuario usuario)
         emailService.SendEmail(usuario.Correo, subject, body);
 
         return Ok("Se ha enviado un correo con sus credenciales.");
+    }
+
+    [HttpGet("usuarios")]
+    public async Task<IActionResult> GetUsuarios([FromQuery] string? tipoUsuario = null)
+    {
+        try
+        {
+            var query = _context.Usuarios.AsQueryable();
+
+            if (!string.IsNullOrEmpty(tipoUsuario))
+            {
+                query = query.Where(u => u.TipoUsuario == tipoUsuario);
+            }
+
+            var usuarios = await query
+                .Select(u => new
+                {
+                    u.IdUsuario,
+                    u.Nombre,
+                    u.Correo,
+                    u.TipoUsuario,
+                    FechaRegistro = u.FechaCreacion.ToString("yyyy-MM-dd")
+                })
+                .ToListAsync();
+
+            return Ok(usuarios);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Error interno: {ex.Message}");
+        }
     }
 
     public class RecuperarContrasenaRequest

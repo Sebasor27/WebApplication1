@@ -12,9 +12,10 @@ public partial class EncuestasIce
     public int IdPregunta { get; set; }
 
     public int ValorRespuesta { get; set; }
+
     public int IdEncuesta { get; set; }
 
-    public virtual Emprendedore? IdEmprendedorNavigation { get; set; } = null!;
+    public virtual Emprendedore IdEmprendedorNavigation { get; set; } = null!;
 
-    public virtual PreguntasIce? IdPreguntaNavigation { get; set; } = null!;
+    public virtual PreguntasIce IdPreguntaNavigation { get; set; } = null!;
 }

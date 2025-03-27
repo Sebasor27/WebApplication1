@@ -5,17 +5,24 @@ services:
     image: mcr.microsoft.com/mssql/server:latest
     container_name: sqlserver
     environment:
-      SA_PASSWORD: "TuContraseñaFuerte123" # Cambia esto por tu contraseña
+      SA_PASSWORD: "TuContraseñaFuerte123"
       ACCEPT_EULA: "Y"
     ports:
       - "1433:1433"
     volumes:
       - sqlserver-data:/var/opt/mssql
+      - ./backups:/backups  # Carpeta local con el archivo .bak
     networks:
       - app-network
+    # Comando para restaurar el backup al iniciar
+    command: 
+      - /bin/bash
+      - -c
+      - |
+        /opt/mssql/bin/sqlservr & /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "TuContraseñaFuerte123" -Q "RESTORE DATABASE [centroEmp] FROM DISK = N'/backups/centroEmp-2025327-0-25-45.bak' WITH MOVE 'centroEmp' TO '/var/opt/mssql/data/centroEmp.mdf', MOVE 'centroEmp_log' TO '/var/opt/mssql/data/centroEmp_log.ldf', REPLACE"
 
   webapp:
-    image: webapp # Nombre de la imagen de tu aplicación .NET
+    image: webapp
     container_name: webapp
     build:
       context: .

@@ -14,6 +14,4 @@ public partial class Indicadore
     public string? NivelDesarrollo { get; set; }
 
     public string? Acciones { get; set; }
-
-    public virtual ICollection<ResumenIce> ResumenIces { get; set; } = new List<ResumenIce>();
 }

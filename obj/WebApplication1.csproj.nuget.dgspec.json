@@ -10,7 +10,7 @@
         "projectUniqueName": "/mnt/volumen/sebas/Programas/programa 1/WebApplication1/WebApplication1.csproj",
         "projectName": "WebApplication1",
         "projectPath": "/mnt/volumen/sebas/Programas/programa 1/WebApplication1/WebApplication1.csproj",
-        "packagesPath": "/home/sebas/.nuget/packages/",
+        "packagesPath": "/mnt/volumen/sebas/nuget/packages",
         "outputPath": "/mnt/volumen/sebas/Programas/programa 1/WebApplication1/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
