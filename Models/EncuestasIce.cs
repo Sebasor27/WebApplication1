@@ -15,7 +15,8 @@ public partial class EncuestasIce
 
     public int IdEncuesta { get; set; }
 
-    public virtual Emprendedore IdEmprendedorNavigation { get; set; } = null!;
+    public virtual Emprendedore? IdEmprendedorNavigation { get; set; } = null!;
 
-    public virtual PreguntasIce IdPreguntaNavigation { get; set; } = null!;
+    public virtual PreguntasIce? IdPreguntaNavigation { get; set; } = null!;
+
 }

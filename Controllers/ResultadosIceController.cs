@@ -72,32 +72,6 @@ namespace WebApplication1.Controllers
             return NoContent();
         }
 
-        // POST: api/ResultadosIce
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<ResultadosIce>> PostResultadosIce(ResultadosIce resultadosIce)
-        {
-            _context.ResultadosIces.Add(resultadosIce);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetResultadosIce", new { id = resultadosIce.IdResultado }, resultadosIce);
-        }
-
-        // DELETE: api/ResultadosIce/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteResultadosIce(int id)
-        {
-            var resultadosIce = await _context.ResultadosIces.FindAsync(id);
-            if (resultadosIce == null)
-            {
-                return NotFound();
-            }
-
-            _context.ResultadosIces.Remove(resultadosIce);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
 
         private bool ResultadosIceExists(int id)
         {

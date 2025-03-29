@@ -512,9 +512,13 @@ public partial class CentroEmpContext : DbContext
 
         modelBuilder.Entity<ResumenIce>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("resumen_ice");
+            entity.ToTable("resumen_ice");
+            entity.HasKey(e => e.IdResumenIce)
+                  .HasName("PK_resumen_ice");
+
+            entity.Property(e => e.IdResumenIce)
+                  .HasColumnName("id_resumen_ice")
+                  .ValueGeneratedOnAdd();
 
             entity.HasIndex(e => e.IdIndicadores, "id_indicador_ice_ibfk_2");
 

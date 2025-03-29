@@ -54,6 +54,7 @@ public class UsuarioController : ControllerBase
 
         var claims = new[]
         {
+        new Claim("idUsuario", usuario.IdUsuario.ToString()),   
         new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
         new Claim(ClaimTypes.Email, usuario.Correo),
         new Claim("TipoUsuario", usuario.TipoUsuario)

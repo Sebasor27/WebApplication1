@@ -17,7 +17,6 @@ public class EncuestaService
 
     public async Task<int> CrearNuevaEncuesta(int emprendedorId)
     {
-
         var ultimaEncuesta = await _context.EncuestasIces
                                           .Where(e => e.IdEmprendedor == emprendedorId)
                                           .OrderByDescending(e => e.IdEncuesta)
@@ -28,21 +27,19 @@ public class EncuestaService
         return nuevoIdEncuesta;
     }
 
-
-    public async Task GuardarRespuestasEncuesta(int emprendedorId, int idEncuesta, List<EncuestasIce> respuestas)
+    public async Task GuardarRespuestasEncuesta(int emprendedorId, int idEncuesta, List<EncuestaIceDto> respuestasDto)
     {
         try
         {
-            foreach (var respuesta in respuestas)
+            var respuestas = respuestasDto.Select(dto => new EncuestasIce
             {
+                IdEmprendedor = emprendedorId,
+                IdEncuesta = idEncuesta,
+                IdPregunta = dto.IdPregunta, // Asegúrate de que esto se establece correctamente
+                ValorRespuesta = dto.ValorAjustado
+            }).ToList();
 
-                respuesta.IdEmprendedor = emprendedorId;
-                respuesta.IdEncuesta = idEncuesta;
-
-
-                await _context.EncuestasIces.AddAsync(respuesta);
-            }
-
+            await _context.EncuestasIces.AddRangeAsync(respuestas);
             await _context.SaveChangesAsync();
         }
         catch (Exception ex)
@@ -110,58 +107,84 @@ public class EncuestaService
     }
 
     public async Task CalcularIceTotal(int emprendedorId, int idEncuesta)
+{
+    try
     {
-        try
+        var resumenExistente = await _context.ResumenIces
+            .FirstOrDefaultAsync(r => r.IdEmprendedor == emprendedorId && r.IdEncuesta == idEncuesta);
+
+        if (resumenExistente != null)
         {
-            var resumenExistente = await _context.ResumenIces
-                                                 .FirstOrDefaultAsync(r => r.IdEmprendedor == emprendedorId && r.IdEncuesta == idEncuesta);
+            throw new ApplicationException("Ya existe un resumen ICE para esta encuesta.");
+        }
 
-            if (resumenExistente != null)
+        // Calcular el ICE total sumando todas las puntuaciones de competencia
+        var valorIceTotal = (double)await _context.ResultadosIces
+            .Where(r => r.IdEmprendedor == emprendedorId && r.IdEncuesta == idEncuesta)
+            .SumAsync(r => r.PuntuacionCompetencia);
+
+        Console.WriteLine($"Valor ICE total calculado: {valorIceTotal}");
+
+        // Obtener todos los indicadores y buscar el correspondiente
+        var indicadores = await _context.Indicadores.ToListAsync();
+        var indicadorEncontrado = indicadores.FirstOrDefault(indicador =>
+        {
+            try
             {
-                throw new ApplicationException("Ya existe un resumen ICE para esta encuesta.");
-            }
-
-            var resultados = await _context.ResultadosIces
-                                                .Where(r => r.IdEmprendedor == emprendedorId && r.IdEncuesta == idEncuesta)
-                                                .ToListAsync();
-
-            double valorIceTotal = (double)resultados.Sum(r => r.PuntuacionCompetencia);
-
-            var indicadores = await _context.Indicadores.ToListAsync();
-
-            var indicadorEncontrado = indicadores.FirstOrDefault(indicador =>
-            {
-                if (string.IsNullOrEmpty(indicador.Rango))
+                if (string.IsNullOrWhiteSpace(indicador.Rango))
                     return false;
 
-                var rango = indicador.Rango.Trim('[', ']', '(', ')');
-                var limites = rango.Split('-');
+                // Limpiar y parsear el rango
+                var rangoLimpio = indicador.Rango.Trim();
+                
+                // Quitar cualquier paréntesis o corchete
+                rangoLimpio = rangoLimpio.TrimStart('[', '(').TrimEnd(']', ')');
+                
+                var limites = rangoLimpio.Split(new[] { '-', '~', ',' }, StringSplitOptions.RemoveEmptyEntries);
 
                 if (limites.Length != 2)
                     return false;
 
-                double rangoInicio = double.Parse(limites[0].Trim(), CultureInfo.InvariantCulture);
-                double rangoFin = double.Parse(limites[1].Trim(), CultureInfo.InvariantCulture);
+                if (!double.TryParse(limites[0].Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out double rangoInicio))
+                    return false;
 
-                return valorIceTotal >= rangoInicio && valorIceTotal < rangoFin;
-            });
+                if (!double.TryParse(limites[1].Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out double rangoFin))
+                    return false;
 
-            var resumenIce = new ResumenIce
+                // Verificar si el valor está dentro del rango
+                return valorIceTotal >= rangoInicio && valorIceTotal <= rangoFin;
+            }
+            catch
             {
-                IdEmprendedor = emprendedorId,
-                ValorIceTotal = (decimal)valorIceTotal,
-                IdIndicadores = indicadorEncontrado?.IdIndicadores, 
-                IdEncuesta = idEncuesta 
-            };
+                // Si hay algún error al parsear, ignorar este indicador
+                return false;
+            }
+        });
 
-            await _context.ResumenIces.AddAsync(resumenIce);
-            await _context.SaveChangesAsync();
-        }
-        catch (Exception ex)
+        if (indicadorEncontrado == null)
         {
-            throw new ApplicationException("Error al calcular el ICE total", ex);
+            Console.WriteLine($"No se encontró indicador para el valor ICE: {valorIceTotal}");
         }
+
+        var resumenIce = new ResumenIce
+        {
+            IdEmprendedor = emprendedorId,
+            ValorIceTotal = (decimal)valorIceTotal,
+            IdIndicadores = indicadorEncontrado?.IdIndicadores,
+            IdEncuesta = idEncuesta
+        };
+
+        await _context.ResumenIces.AddAsync(resumenIce);
+        await _context.SaveChangesAsync();
+        
+        Console.WriteLine("Resumen ICE guardado exitosamente");
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error en CalcularIceTotal: {ex.ToString()}");
+        throw new ApplicationException("Error al calcular el ICE total", ex);
+    }
+}
 
     public async Task<List<int>> ObtenerEncuestasDeEmprendedor(int emprendedorId)
     {

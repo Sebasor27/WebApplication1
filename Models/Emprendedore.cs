@@ -54,4 +54,5 @@ public partial class Emprendedore
     public virtual ICollection<ResultadosIepm> ResultadosIepms { get; set; } = new List<ResultadosIepm>();
     public virtual ICollection<RespuestasIepm> RespuestasIepms { get; set; } = new List<RespuestasIepm>();
 
+
 }

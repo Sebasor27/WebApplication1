@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using WebApplication1.Models;
 
@@ -20,22 +18,35 @@ namespace WebApplication1.Controllers
         }
 
         [HttpPost("procesar-encuesta")]
-        public async Task<IActionResult> ProcesarEncuesta(int emprendedorId, List<EncuestasIce> respuestas)
+        public async Task<IActionResult> ProcesarEncuesta([FromBody] ProcesarEncuestaRequest request)
         {
+            if (request == null)
+            {
+                return BadRequest("El cuerpo de la solicitud no puede estar vacío");
+            }
+
+            if (request.Respuestas == null || request.Respuestas.Count == 0)
+            {
+                return BadRequest("Debe proporcionar al menos una respuesta");
+            }
+
             try
             {
-                int idEncuesta = await _encuestaService.CrearNuevaEncuesta(emprendedorId);
+                int idEncuesta = await _encuestaService.CrearNuevaEncuesta(request.EmprendedorId);
 
-                await _encuestaService.GuardarRespuestasEncuesta(emprendedorId, idEncuesta, respuestas);
+                await _encuestaService.GuardarRespuestasEncuesta(
+                    request.EmprendedorId, 
+                    idEncuesta, 
+                    request.Respuestas
+                );
 
-                await _encuestaService.CalcularYGuardarPuntuacionCompetencia(emprendedorId, idEncuesta);
-
-                await _encuestaService.CalcularIceTotal(emprendedorId, idEncuesta);
+                await _encuestaService.CalcularYGuardarPuntuacionCompetencia(request.EmprendedorId, idEncuesta);
+                await _encuestaService.CalcularIceTotal(request.EmprendedorId, idEncuesta);
 
                 return Ok(new 
                 { 
-                    idEncuesta = idEncuesta, 
-                    message = "Encuesta procesada correctamente, respuestas guardadas, puntuación calculada y ICE total calculado." 
+                    IdEncuesta = idEncuesta, 
+                    Message = "Encuesta procesada correctamente" 
                 });
             }
             catch (Exception ex)
@@ -43,5 +54,13 @@ namespace WebApplication1.Controllers
                 return StatusCode(500, $"Error al procesar la encuesta: {ex.Message}");
             }
         }
+    }
+
+    
+
+    public class ProcesarEncuestaRequest
+    {
+        public int EmprendedorId { get; set; }
+        public List<EncuestaIceDto> Respuestas { get; set; } = new List<EncuestaIceDto>();
     }
 }
