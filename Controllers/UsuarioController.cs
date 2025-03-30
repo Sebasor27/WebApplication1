@@ -64,7 +64,7 @@ public class UsuarioController : ControllerBase
             issuer: _configuration["Jwt:Issuer"],
             audience: _configuration["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.Now.AddHours(1),
+            expires: DateTime.Now.AddDays(1),     
             signingCredentials: credentials
         );
 
