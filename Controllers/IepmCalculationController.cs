@@ -21,56 +21,54 @@ namespace WebApplication1.Controllers
             _iepmCalculatorService = iepmCalculatorService;
         }
 
-        [HttpPost("CalculateIEPM")]
-        public ActionResult<ResultadoIepmCompleto> CalculateIEPM([FromBody] IepmCalculationRequest request)
-        {
-            try
-            {
-                if (request == null || request.IdEmprendedor <= 0 || request.IdEncuesta <= 0)
-                {
-                    return BadRequest("Invalid request data");
-                }
-
-                var result = _iepmCalculatorService.CalculateAndSaveIEPM(request.IdEmprendedor, request.IdEncuesta);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-            }
-        }
-
-        [HttpGet("LastResult/{idEmprendedor}")]
-        public ActionResult<ResultadoIepmCompleto> GetLastResult(int idEmprendedor)
+        [HttpGet("Encuestas/{idEmprendedor}")]
+        public ActionResult<List<EncuestaConResultadoDto>> GetEncuestas(int idEmprendedor)
         {
             try
             {
                 if (idEmprendedor <= 0)
                 {
-                    return BadRequest("Invalid emprendedor ID");
+                    return BadRequest("ID de emprendedor inválido");
                 }
 
-                var result = _iepmCalculatorService.GetLastResult(idEmprendedor);
-                
-                if (result == null)
-                {
-                    return NotFound("No results found for this emprendedor");
-                }
-
-                return Ok(result);
+                var encuestas = _iepmCalculatorService.GetEncuestasConResultados(idEmprendedor);
+                return Ok(encuestas);
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+                return StatusCode(500, $"Error al obtener encuestas: {ex.Message}");
             }
         }
 
-        
+        [HttpGet("Resultado/{idEmprendedor}/{idEncuesta}")]
+        public ActionResult<ResultadoIepmCompleto> GetResultado(int idEmprendedor, int idEncuesta)
+        {
+            try
+            {
+                if (idEmprendedor <= 0 || idEncuesta <= 0)
+                {
+                    return BadRequest("Parámetros inválidos");
+                }
+
+                var resultado = _iepmCalculatorService.GetResultadoPorEncuestaIepm(idEmprendedor, idEncuesta);
+                return Ok(resultado);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error al obtener resultado: {ex.Message}");
+            }
+        }
     }
 
-    public class IepmCalculationRequest
-    {
-        public int IdEmprendedor { get; set; }
-        public int IdEncuesta { get; set; }
-    }
+
+}
+
+public class IepmCalculationRequest
+{
+    public int IdEmprendedor { get; set; }
+    public int IdEncuesta { get; set; }
 }

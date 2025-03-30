@@ -10,6 +10,9 @@ namespace WebApplication1.Services
     {
         ResultadoIepmCompleto CalculateAndSaveIEPM(int idEmprendedor, int idEncuesta);
         ResultadoIepmCompleto GetLastResult(int idEmprendedor);
+
+        List<EncuestaConResultadoDto> GetEncuestasConResultados(int idEmprendedor); // Nuevo método
+        ResultadoIepmCompleto GetResultadoPorEncuestaIepm(int idEmprendedor, int idEncuesta); // Nuevo método
     }
 
     public class IepmCalculatorService : IIepmCalculatorService
@@ -39,8 +42,6 @@ namespace WebApplication1.Services
             if (!encuesta.RespuestasIepms.Any())
                 throw new InvalidOperationException("La encuesta no tiene respuestas asociadas");
 
-            using var transaction = _context.Database.BeginTransaction();
-
             try
             {
                 var indicatorResults = CalculateIndicatorResults(idEmprendedor, idEncuesta);
@@ -61,8 +62,6 @@ namespace WebApplication1.Services
                     accionMejora
                 );
 
-                transaction.Commit();
-
                 return new ResultadoIepmCompleto
                 {
                     IEPM = resultadoIepm,
@@ -73,7 +72,6 @@ namespace WebApplication1.Services
             }
             catch (Exception ex)
             {
-                transaction.Rollback();
                 Console.WriteLine($"Error completo: {ex.ToString()}");
                 throw;
             }
@@ -200,6 +198,62 @@ namespace WebApplication1.Services
             return dimensionesConPeso.Sum(x => x.Resultado.Valor * x.Peso) / 5m;
         }
 
+        public List<EncuestaConResultadoDto> GetEncuestasConResultados(int idEmprendedor)
+        {
+            return _context.EncuestasIepms
+                .Where(e => e.IdEmprendedor == idEmprendedor)
+                .Select(e => new EncuestaConResultadoDto
+                {
+                    IdEncuesta = e.IdEncuestaIepm,
+                    FechaAplicacion = (DateTime)e.FechaAplicacion,
+                    CantidadRespuestas = e.RespuestasIepms.Count,
+                    IepmTotal = _context.ResultadosIepms
+                        .Where(r => r.IdEncuesta == e.IdEncuestaIepm)
+                        .Select(r => r.Iepm)
+                        .FirstOrDefault(),
+                    Valoracion = _context.ResultadosIepms
+                        .Where(r => r.IdEncuesta == e.IdEncuestaIepm)
+                        .Select(r => r.Valoracion)
+                        .FirstOrDefault()
+                })
+                .OrderByDescending(e => e.FechaAplicacion)
+                .ToList();
+        }
+
+        public ResultadoIepmCompleto GetResultadoPorEncuestaIepm(int idEmprendedor, int idEncuesta)
+        {
+            // Verificar que la encuesta pertenece al emprendedor
+            if (!_context.EncuestasIepms.Any(e => e.IdEncuestaIepm == idEncuesta && e.IdEmprendedor == idEmprendedor))
+            {
+                throw new KeyNotFoundException("La encuesta no pertenece al emprendedor especificado");
+            }
+
+            var resultado = _context.ResultadosIepms
+                .AsNoTracking()
+                .Include(r => r.ResultadosAccionesIepms)
+                    .ThenInclude(ra => ra.IdAccionNavigation)
+                .FirstOrDefault(r => r.IdEncuesta == idEncuesta);
+
+            if (resultado == null)
+            {
+                throw new KeyNotFoundException("No se encontraron resultados para esta encuesta");
+            }
+
+            return new ResultadoIepmCompleto
+            {
+                IEPM = resultado,
+                Dimensiones = _context.ResultadosDimensionesIepms
+                    .AsNoTracking()
+                    .Where(d => d.IdEncuesta == idEncuesta)
+                    .ToList(),
+                Indicadores = _context.ResultadosIndicadoresIepms
+                    .AsNoTracking()
+                    .Where(i => i.IdEncuesta == idEncuesta)
+                    .ToList(),
+                AccionMejora = resultado.ResultadosAccionesIepms.FirstOrDefault()?.IdAccionNavigation
+            };
+        }
+
         private string GetEvaluation(decimal iepmScore)
         {
             if (iepmScore < 0.3m) return "Muy inadecuada puesta en marcha";
@@ -235,7 +289,7 @@ namespace WebApplication1.Services
                 };
 
                 _context.ResultadosIepms.Add(resultadoIepm);
-                _context.SaveChanges(); 
+                _context.SaveChanges();
 
                 foreach (var dim in dimensionResults)
                 {
@@ -274,6 +328,12 @@ namespace WebApplication1.Services
 
                 throw new Exception($"Error de base de datos: {string.Join(" >> ", errorMessages)}", dbEx);
             }
+        }
+
+
+        public ResultadoIepmCompleto GetResultadoPorEncuesta(int idEmprendedor, int idEncuesta)
+        {
+            throw new NotImplementedException();
         }
     }
 
