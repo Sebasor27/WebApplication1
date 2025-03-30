@@ -47,7 +47,7 @@ public partial class Emprendedore
 
     public virtual ICollection<EncuestasIepm> EncuestasIepms { get; set; } = new List<EncuestasIepm>();
 
-    public virtual Usuario IdUsuarioNavigation { get; set; } = null!;
+    public virtual Usuario? IdUsuarioNavigation { get; set; } = null!;
 
     public virtual ICollection<ResultadosIce> ResultadosIces { get; set; } = new List<ResultadosIce>();
 

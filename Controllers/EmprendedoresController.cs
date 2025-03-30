@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Models;
+using WebApplication1.Models.DTOs;
 
 namespace WebApplication1.Controllers
 {
@@ -18,6 +19,16 @@ namespace WebApplication1.Controllers
         public EmprendedoresController(CentroEmpContext context)
         {
             _context = context;
+        }
+
+        private int GetUserIdFromToken()
+        {
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "idUsuario");
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                throw new UnauthorizedAccessException("Usuario no válido");
+            }
+            return userId;
         }
 
         // GET: api/Emprendedores
@@ -75,13 +86,72 @@ namespace WebApplication1.Controllers
         // POST: api/Emprendedores
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Emprendedore>> PostEmprendedore(Emprendedore emprendedore)
-        {
-            _context.Emprendedores.Add(emprendedore);
-            await _context.SaveChangesAsync();
+public async Task<ActionResult<EmprendedorResponseDto>> CreateEmprendedor(
+    [FromBody] EmprendedorDto createDto)
+{
+    if (!ModelState.IsValid)
+    {
+        return BadRequest(ModelState);
+    }
 
-            return CreatedAtAction("GetEmprendedore", new { id = emprendedore.IdEmprendedor }, emprendedore);
-        }
+    try
+    {
+        var userId = GetUserIdFromToken();
+        
+        var emprendedor = new Emprendedore
+        {
+            IdUsuario = userId,
+            Nombre = createDto.Nombre,
+            Edad = createDto.Edad,
+            NivelEstudio = createDto.NivelEstudio,
+            TrabajoRelacionDependencia = createDto.TrabajoRelacionDependencia,
+            SueldoMensual = createDto.SueldoMensual,
+            Ruc = createDto.Ruc,
+            EmpleadosHombres = createDto.EmpleadosHombres,
+            EmpleadosMujeres = createDto.EmpleadosMujeres,
+            RangoEdadEmpleados = createDto.RangoEdadEmpleados,
+            TipoEmpresa = createDto.TipoEmpresa,
+            AnoCreacionEmpresa = createDto.AnoCreacionEmpresa,
+            Direccion = createDto.Direccion,
+            Telefono = createDto.Telefono,
+            Celular = createDto.Celular,
+            Correo = createDto.Correo,
+            Cedula = createDto.Cedula
+        };
+
+        _context.Emprendedores.Add(emprendedor);
+        await _context.SaveChangesAsync();
+
+        var responseDto = new EmprendedorResponseDto
+        {
+            IdEmprendedor = emprendedor.IdEmprendedor,
+            IdUsuario = emprendedor.IdUsuario,
+            Nombre = emprendedor.Nombre,
+            Edad = emprendedor.Edad,
+            NivelEstudio = emprendedor.NivelEstudio,
+            TrabajoRelacionDependencia = emprendedor.TrabajoRelacionDependencia,
+            SueldoMensual = emprendedor.SueldoMensual,
+            Ruc = emprendedor.Ruc,
+            EmpleadosHombres = emprendedor.EmpleadosHombres,
+            EmpleadosMujeres = emprendedor.EmpleadosMujeres,
+            RangoEdadEmpleados = emprendedor.RangoEdadEmpleados,
+            TipoEmpresa = emprendedor.TipoEmpresa,
+            AnoCreacionEmpresa = emprendedor.AnoCreacionEmpresa,
+            Direccion = emprendedor.Direccion,
+            Telefono = emprendedor.Telefono,
+            Celular = emprendedor.Celular,
+            Correo = emprendedor.Correo,
+            Cedula = emprendedor.Cedula
+        };
+
+        return CreatedAtAction(nameof(GetEmprendedore), 
+            new { id = emprendedor.IdEmprendedor }, responseDto);
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"Error interno: {ex.Message}");
+    }
+}
 
         // DELETE: api/Emprendedores/5
         [HttpDelete("{id}")]
