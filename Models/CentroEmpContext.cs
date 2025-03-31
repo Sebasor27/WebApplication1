@@ -220,6 +220,10 @@ public partial class CentroEmpContext : DbContext
                 .HasColumnName("tipo_empresa");
             entity.Property(e => e.TrabajoRelacionDependencia).HasColumnName("trabajo_relacion_dependencia");
 
+            entity.Property(e => e.FechaRegistro)
+            .HasColumnName("fecha_registro")
+            .HasDefaultValueSql("GETDATE()");
+            
             entity.HasOne(d => d.IdUsuarioNavigation).WithMany(p => p.Emprendedores)
                 .HasForeignKey(d => d.IdUsuario)
                 .OnDelete(DeleteBehavior.ClientSetNull)

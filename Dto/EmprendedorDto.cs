@@ -65,5 +65,8 @@ namespace WebApplication1.Models.DTOs
         [Required(ErrorMessage = "La cédula es obligatoria")]
         [StringLength(10, MinimumLength = 10, ErrorMessage = "La cédula debe tener 10 caracteres")]
         public string Cedula { get; set; } = null!;
+
+        [Required(ErrorMessage = "La fecha de registro es obligatoria")]
+        public DateTime FechaRegistro { get; set; } = DateTime.Now;
     }
 }

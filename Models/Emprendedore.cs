@@ -40,6 +40,7 @@ public partial class Emprendedore
     public string Correo { get; set; } = null!;
 
     public string Cedula { get; set; } = null!;
+    public DateTime FechaRegistro { get; set; } = DateTime.Now;
 
     public virtual ICollection<DatosEmp> DatosEmps { get; set; } = new List<DatosEmp>();
 

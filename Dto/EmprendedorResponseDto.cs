@@ -20,5 +20,6 @@ namespace WebApplication1.Models.DTOs
         public string Celular { get; set; } = null!;
         public string Correo { get; set; } = null!;
         public string Cedula { get; set; } = null!;
+        public DateTime FechaRegistro { get; set; } = DateTime.Now;
     }
 }

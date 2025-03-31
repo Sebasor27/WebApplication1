@@ -116,7 +116,8 @@ public async Task<ActionResult<EmprendedorResponseDto>> CreateEmprendedor(
             Telefono = createDto.Telefono,
             Celular = createDto.Celular,
             Correo = createDto.Correo,
-            Cedula = createDto.Cedula
+            Cedula = createDto.Cedula,
+            FechaRegistro = createDto.FechaRegistro
         };
 
         _context.Emprendedores.Add(emprendedor);
@@ -141,7 +142,8 @@ public async Task<ActionResult<EmprendedorResponseDto>> CreateEmprendedor(
             Telefono = emprendedor.Telefono,
             Celular = emprendedor.Celular,
             Correo = emprendedor.Correo,
-            Cedula = emprendedor.Cedula
+            Cedula = emprendedor.Cedula,
+            FechaRegistro = emprendedor.FechaRegistro
         };
 
         return CreatedAtAction(nameof(GetEmprendedore), 
