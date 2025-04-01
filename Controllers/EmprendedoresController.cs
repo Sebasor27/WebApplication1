@@ -261,6 +261,32 @@ namespace WebApplication1.Controllers
             }
         }
 
+        [HttpPut("activate/{id}")]
+        public async Task<IActionResult> ActivateEmprendedore(int id)
+        {
+            try
+            {
+                var emprendedor = await _context.Emprendedores.FindAsync(id);
+                if (emprendedor == null)
+                {
+                    return NotFound();
+                }
+
+                // Marcamos como activo y limpiamos la fecha de inactivación
+                emprendedor.Estado = true;
+                emprendedor.FechaInactivacion = null;
+
+                _context.Entry(emprendedor).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno al activar el emprendedor: {ex.Message}");
+            }
+        }
+
         private bool EmprendedoreExists(int id)
         {
             return _context.Emprendedores.Any(e => e.IdEmprendedor == id);
