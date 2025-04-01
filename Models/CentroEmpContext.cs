@@ -223,7 +223,15 @@ public partial class CentroEmpContext : DbContext
             entity.Property(e => e.FechaRegistro)
             .HasColumnName("fecha_registro")
             .HasDefaultValueSql("GETDATE()");
-            
+
+            entity.Property(e => e.Estado)
+            .HasColumnName("estado")
+            .HasDefaultValue(true);
+
+            entity.Property(e => e.FechaInactivacion)
+                .HasColumnName("fecha_inactivacion")
+                .IsRequired(false);
+
             entity.HasOne(d => d.IdUsuarioNavigation).WithMany(p => p.Emprendedores)
                 .HasForeignKey(d => d.IdUsuario)
                 .OnDelete(DeleteBehavior.ClientSetNull)

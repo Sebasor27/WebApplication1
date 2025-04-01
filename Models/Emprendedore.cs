@@ -42,6 +42,9 @@ public partial class Emprendedore
     public string Cedula { get; set; } = null!;
     public DateTime FechaRegistro { get; set; } = DateTime.Now;
 
+    public bool Estado { get; set; } = true; 
+    public DateTime? FechaInactivacion { get; set; } 
+
     public virtual ICollection<DatosEmp> DatosEmps { get; set; } = new List<DatosEmp>();
 
     public virtual ICollection<EncuestasIce> EncuestasIces { get; set; } = new List<EncuestasIce>();

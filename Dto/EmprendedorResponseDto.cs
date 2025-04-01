@@ -21,5 +21,9 @@ namespace WebApplication1.Models.DTOs
         public string Correo { get; set; } = null!;
         public string Cedula { get; set; } = null!;
         public DateTime FechaRegistro { get; set; } = DateTime.Now;
+        public bool Estado { get; set; } = true;
+        public DateTime? FechaInactivacion { get; set; }
+
+
     }
 }

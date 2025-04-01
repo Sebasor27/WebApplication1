@@ -68,5 +68,10 @@ namespace WebApplication1.Models.DTOs
 
         [Required(ErrorMessage = "La fecha de registro es obligatoria")]
         public DateTime FechaRegistro { get; set; } = DateTime.Now;
+
+        [Required]
+        public bool Estado { get; set; } = true;
+
+        public DateTime? FechaInactivacion { get; set; }
     }
 }
