@@ -30,6 +30,7 @@ namespace WebApplication1.Controllers
                 .Select(p => new
                 {
                     p.IdPregunta,
+                    p.IdCuestionario,
                     Destinatario = p.IdCuestionarioNavigation.Destinatario,
                     Indicador = p.IdIndicadorNavigation.Nombre,
                     p.Enunciado,
@@ -42,6 +43,8 @@ namespace WebApplication1.Controllers
                             c.Valor
                         })
                 })
+                .OrderBy(p => p.IdCuestionario)
+                .ThenBy(p => p.Orden)
                 .ToListAsync();
 
             return Ok(preguntas);
@@ -81,9 +84,23 @@ namespace WebApplication1.Controllers
                         {
                             Dimension = d.Nombre,
                             Puntaje = rd.Valor,
-                            Porcentaje = Math.Round(rd.Valor * 100, 2)
+                            Peso = d.Peso 
                         })
                     .ToList();
+
+                decimal iepmNormalizado = resultadosDimensiones.Sum(rd => rd.Puntaje * rd.Peso) / 5m;
+
+                string valoracion;
+                if (iepmNormalizado < 0.3m)
+                    valoracion = "Muy inadecuada puesta en marcha";
+                else if (iepmNormalizado < 0.6m)
+                    valoracion = "Inadecuada puesta en marcha";
+                else if (iepmNormalizado < 0.8m)
+                    valoracion = "Adecuada puesta en marcha";
+                else
+                    valoracion = "Muy adecuada puesta en marcha";
+
+                bool esExitoso = iepmNormalizado >= 0.6m;
 
                 var resultadosIndicadores = _context.ResultadosIndicadoresIepms
                     .Where(ri => ri.IdEncuesta == resultadoIEPM.IdEncuesta)
@@ -99,7 +116,8 @@ namespace WebApplication1.Controllers
                             Dimension = _context.DimensionesIepms
                                 .Where(d => d.IdDimensionIepm == i.IdDimension)
                                 .Select(d => d.Nombre)
-                                .FirstOrDefault()
+                                .FirstOrDefault(),
+                            Peso = i.Peso 
                         })
                     .ToList();
 
@@ -108,22 +126,33 @@ namespace WebApplication1.Controllers
                     .Select(ra => ra.IdAccionNavigation)
                     .FirstOrDefault();
 
-                bool esExitoso = resultadoIEPM.Iepm >= 0.6m;
-
                 var response = new
                 {
                     Emprendedor = $"{emprendedor.Nombre} {emprendedor.Cedula}",
                     ResultadoTotal = new
                     {
-                        Puntaje = Math.Round(resultadoIEPM.Iepm, 4),
-                        Porcentaje = Math.Round(resultadoIEPM.Iepm * 100, 2),
-                        Valoracion = resultadoIEPM.Valoracion,
+                        Puntaje = Math.Round(iepmNormalizado, 4),
+                        Porcentaje = Math.Round(iepmNormalizado * 100, 2),
+                        Valoracion = valoracion,
                         EsExitoso = esExitoso,
                         Criterio = esExitoso ? "Adecuada/Muy adecuada puesta en marcha"
                                             : "Inadecuada/Muy inadecuada puesta en marcha"
                     },
-                    PorDimension = resultadosDimensiones,
-                    PorIndicador = resultadosIndicadores,
+                    PorDimension = resultadosDimensiones.Select(rd => new
+                    {
+                        rd.Dimension,
+                        Puntaje = Math.Round(rd.Puntaje, 4),
+                        Porcentaje = Math.Round(rd.Puntaje * 100, 2),
+                        rd.Peso
+                    }),
+                    PorIndicador = resultadosIndicadores.Select(ri => new
+                    {
+                        ri.Indicador,
+                        Puntaje = Math.Round(ri.Puntaje, 4),
+                        Porcentaje = ri.Porcentaje,
+                        ri.Dimension,
+                        ri.Peso
+                    }),
                     AccionRecomendada = accionMejora != null ? new
                     {
                         accionMejora.Descripcion,
@@ -139,7 +168,6 @@ namespace WebApplication1.Controllers
                 return StatusCode(500, $"Error al obtener resultados: {ex.Message}");
             }
         }
-
 
 
         private bool PreguntasIepmExists(int id)

@@ -35,7 +35,7 @@ public class EncuestaService
             {
                 IdEmprendedor = emprendedorId,
                 IdEncuesta = idEncuesta,
-                IdPregunta = dto.IdPregunta, // Asegúrate de que esto se establece correctamente
+                IdPregunta = dto.IdPregunta, 
                 ValorRespuesta = dto.ValorAjustado
             }).ToList();
 
@@ -90,7 +90,7 @@ public class EncuestaService
                     IdCompetencia = competencia.IdCompetencia,
                     Valoracion = valoracion,
                     PuntuacionCompetencia = puntuacionCompetencia,
-                    IdEncuesta = idEncuesta // Vincular el resultado a la encuesta específica
+                    IdEncuesta = idEncuesta 
                 };
 
                 await _context.ResultadosIces.AddAsync(resultado);
@@ -118,14 +118,12 @@ public class EncuestaService
             throw new ApplicationException("Ya existe un resumen ICE para esta encuesta.");
         }
 
-        // Calcular el ICE total sumando todas las puntuaciones de competencia
         var valorIceTotal = (double)await _context.ResultadosIces
             .Where(r => r.IdEmprendedor == emprendedorId && r.IdEncuesta == idEncuesta)
             .SumAsync(r => r.PuntuacionCompetencia);
 
         Console.WriteLine($"Valor ICE total calculado: {valorIceTotal}");
 
-        // Obtener todos los indicadores y buscar el correspondiente
         var indicadores = await _context.Indicadores.ToListAsync();
         var indicadorEncontrado = indicadores.FirstOrDefault(indicador =>
         {
@@ -134,10 +132,8 @@ public class EncuestaService
                 if (string.IsNullOrWhiteSpace(indicador.Rango))
                     return false;
 
-                // Limpiar y parsear el rango
                 var rangoLimpio = indicador.Rango.Trim();
                 
-                // Quitar cualquier paréntesis o corchete
                 rangoLimpio = rangoLimpio.TrimStart('[', '(').TrimEnd(']', ')');
                 
                 var limites = rangoLimpio.Split(new[] { '-', '~', ',' }, StringSplitOptions.RemoveEmptyEntries);
@@ -151,12 +147,10 @@ public class EncuestaService
                 if (!double.TryParse(limites[1].Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out double rangoFin))
                     return false;
 
-                // Verificar si el valor está dentro del rango
                 return valorIceTotal >= rangoInicio && valorIceTotal <= rangoFin;
             }
             catch
             {
-                // Si hay algún error al parsear, ignorar este indicador
                 return false;
             }
         });

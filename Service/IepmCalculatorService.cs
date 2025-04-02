@@ -11,8 +11,8 @@ namespace WebApplication1.Services
         ResultadoIepmCompleto CalculateAndSaveIEPM(int idEmprendedor, int idEncuesta);
         ResultadoIepmCompleto GetLastResult(int idEmprendedor);
 
-        List<EncuestaConResultadoDto> GetEncuestasConResultados(int idEmprendedor); // Nuevo método
-        ResultadoIepmCompleto GetResultadoPorEncuestaIepm(int idEmprendedor, int idEncuesta); // Nuevo método
+        List<EncuestaConResultadoDto> GetEncuestasConResultados(int idEmprendedor); 
+        ResultadoIepmCompleto GetResultadoPorEncuestaIepm(int idEmprendedor, int idEncuesta); 
     }
 
     public class IepmCalculatorService : IIepmCalculatorService
@@ -222,7 +222,6 @@ namespace WebApplication1.Services
 
         public ResultadoIepmCompleto GetResultadoPorEncuestaIepm(int idEmprendedor, int idEncuesta)
         {
-            // Verificar que la encuesta pertenece al emprendedor
             if (!_context.EncuestasIepms.Any(e => e.IdEncuestaIepm == idEncuesta && e.IdEmprendedor == idEmprendedor))
             {
                 throw new KeyNotFoundException("La encuesta no pertenece al emprendedor especificado");

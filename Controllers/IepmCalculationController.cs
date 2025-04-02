@@ -41,7 +41,7 @@ namespace WebApplication1.Controllers
         }
 
         [HttpGet("Resultado/{idEmprendedor}/{idEncuesta}")]
-        public ActionResult<ResultadoIepmCompleto> GetResultado(int idEmprendedor, int idEncuesta)
+        public ActionResult<dynamic> GetResultado(int idEmprendedor, int idEncuesta)
         {
             try
             {
@@ -51,7 +51,45 @@ namespace WebApplication1.Controllers
                 }
 
                 var resultado = _iepmCalculatorService.GetResultadoPorEncuestaIepm(idEmprendedor, idEncuesta);
-                return Ok(resultado);
+
+                decimal sumaDimensiones = resultado.Dimensiones.Sum(d => d.Valor);
+                decimal sumaIndicadores = resultado.Indicadores.Sum(i => i.Valor);
+
+                var response = new
+                {
+                    iepm = new
+                    {
+                        resultado.IEPM.IdResultadoIepm,
+                        resultado.IEPM.IdEncuesta,
+                        resultado.IEPM.IdEmprendedor,
+                        resultado.IEPM.Iepm,
+                        porcentaje = 100,  
+                        resultado.IEPM.Valoracion,
+                        resultado.IEPM.FechaCalculo,
+                        resultadosAccionesIepms = resultado.IEPM.ResultadosAccionesIepms
+                    },
+                    dimensiones = resultado.Dimensiones.Select(d => new
+                    {
+                        d.IdResultadoDimension,
+                        d.IdEncuesta,
+                        d.IdDimension,
+                        d.Valor,
+                        porcentaje = sumaDimensiones == 0 ? 0 : Math.Round((double)(d.Valor / sumaDimensiones * 100), 2),
+                        d.FechaCalculo
+                    }),
+                    indicadores = resultado.Indicadores.Select(i => new
+                    {
+                        i.IdResultadoIndicador,
+                        i.IdEncuesta,
+                        i.IdIndicador,
+                        i.Valor,
+                        porcentaje = sumaIndicadores == 0 ? 0 : Math.Round((double)(i.Valor / sumaIndicadores * 100), 2),
+                        i.FechaCalculo
+                    }),
+                    accionMejora = resultado.AccionMejora
+                };
+
+                return Ok(response);
             }
             catch (KeyNotFoundException ex)
             {
@@ -62,13 +100,11 @@ namespace WebApplication1.Controllers
                 return StatusCode(500, $"Error al obtener resultado: {ex.Message}");
             }
         }
+
+        public class IepmCalculationRequest
+        {
+            public int IdEmprendedor { get; set; }
+            public int IdEncuesta { get; set; }
+        }
     }
-
-
-}
-
-public class IepmCalculationRequest
-{
-    public int IdEmprendedor { get; set; }
-    public int IdEncuesta { get; set; }
 }
