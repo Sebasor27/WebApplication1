@@ -7,8 +7,8 @@ namespace WebApplication1.Models;
 
 public partial class ResumenIce
 {
-    [Key] // Esto marca la propiedad como clave primaria
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)] // Para autoincrementar
+    [Key] 
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
     public int IdResumenIce { get; set; }
     public int IdEmprendedor { get; set; }
 
@@ -17,6 +17,10 @@ public partial class ResumenIce
     public int? IdIndicadores { get; set; }
 
     public int IdEncuesta { get; set; }
+
+    [Column(TypeName = "datetime")]
+    public DateTime FechaEvaluacion { get; set; } = DateTime.Now;
+
 
     public virtual Emprendedore IdEmprendedorNavigation { get; set; } = null!;
 

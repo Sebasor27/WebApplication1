@@ -165,7 +165,8 @@ public class EncuestaService
             IdEmprendedor = emprendedorId,
             ValorIceTotal = (decimal)valorIceTotal,
             IdIndicadores = indicadorEncontrado?.IdIndicadores,
-            IdEncuesta = idEncuesta
+            IdEncuesta = idEncuesta,
+            FechaEvaluacion = DateTime.Now
         };
 
         await _context.ResumenIces.AddAsync(resumenIce);

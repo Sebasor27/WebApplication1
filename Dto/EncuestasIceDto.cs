@@ -5,6 +5,7 @@ namespace WebApplication1.Models
         public int IdEmprendedor { get; set; }
         public int ValorRespuesta { get; set; }
         public int IdPregunta { get; set; }
+        public DateTime? FechaEvaluacion { get; set; }
 
         // Propiedad calculada que devuelve el valor ajustado según el tipo de pregunta
         public int ValorAjustado

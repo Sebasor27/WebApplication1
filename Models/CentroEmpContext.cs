@@ -543,6 +543,10 @@ public partial class CentroEmpContext : DbContext
                 .HasColumnType("decimal(6, 5)")
                 .HasColumnName("valor_ice_total");
 
+            entity.Property(e => e.FechaEvaluacion)
+                .HasColumnName("fecha_evaluacion")
+                .HasDefaultValueSql("GETDATE()");
+
             entity.HasOne(d => d.IdEmprendedorNavigation).WithMany()
                 .HasForeignKey(d => d.IdEmprendedor)
                 .OnDelete(DeleteBehavior.ClientSetNull)
