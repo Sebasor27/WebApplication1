@@ -7,17 +7,14 @@ namespace WebApplication1.Models
         public int IdPregunta { get; set; }
         public DateTime? FechaEvaluacion { get; set; }
 
-        // Propiedad calculada que devuelve el valor ajustado según el tipo de pregunta
         public int ValorAjustado
         {
             get
             {
-                // Lista de IDs de preguntas especiales (1-2-3 → 1-3-5)
                 var preguntasEspeciales = new[] { 12, 21, 43, 52 };
                 
                 if (preguntasEspeciales.Contains(IdPregunta))
                 {
-                    // Conversión para preguntas especiales
                     return ValorRespuesta switch
                     {
                         1 => 1,
@@ -30,14 +27,12 @@ namespace WebApplication1.Models
             }
         }
 
-        // Método estático para identificar si una pregunta es especial
         public static bool EsPreguntaEspecial(int idPregunta)
         {
             var preguntasEspeciales = new[] { 12, 21, 43, 52 };
             return preguntasEspeciales.Contains(idPregunta);
         }
 
-        // Método estático para obtener los puntos máximos por competencia
         public static Dictionary<int, int> PuntosMaximosPorCompetencia = new Dictionary<int, int>
         {
             {1, 40},  // Comportamiento emprendedor-éxito (8 preguntas ×5)
@@ -52,7 +47,6 @@ namespace WebApplication1.Models
             {10, 20}  // Orientación a la tecnología e innovación (4 ×5)
         };
 
-        // Método para validar valores de respuesta según el tipo de pregunta
         public bool EsValorValido()
         {
             if (EsPreguntaEspecial(IdPregunta))
