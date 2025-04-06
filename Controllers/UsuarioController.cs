@@ -95,7 +95,7 @@ public class UsuarioController : ControllerBase
 
         var emailService = new EmailService(_configuration);
         var subject = "Recuperación de contraseña";
-        var body = $"Su nombre de usuario es: {usuario.Nombre}\nSu contraseña es: {usuario.Contraseña}";
+        var body = $"Su nombre de usuario es : {usuario.Nombre}\nSu contraseña es : {usuario.Contraseña}";
 
         emailService.SendEmail(usuario.Correo, subject, body);
 

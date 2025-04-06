@@ -9,7 +9,7 @@ namespace WebApplication1.Models.DTOs
         public string NivelEstudio { get; set; } = null!;
         public bool TrabajoRelacionDependencia { get; set; }
         public string SueldoMensual { get; set; } = null!;
-        public string Ruc { get; set; } = null!;
+        public string? Ruc { get; set; } 
         public int EmpleadosHombres { get; set; }
         public int EmpleadosMujeres { get; set; }
         public string? RangoEdadEmpleados { get; set; }

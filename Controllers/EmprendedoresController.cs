@@ -67,14 +67,12 @@ namespace WebApplication1.Controllers
 
             try
             {
-                // 1. Buscar emprendedor existente
                 var emprendedor = await _context.Emprendedores.FindAsync(id);
                 if (emprendedor == null)
                 {
                     return NotFound();
                 }
 
-                // 4. Actualización condicional (mapeo completo)
                 if (!string.IsNullOrEmpty(updateDto.Nombre))
                     emprendedor.Nombre = updateDto.Nombre;
 

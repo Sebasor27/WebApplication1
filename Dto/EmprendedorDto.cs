@@ -23,9 +23,8 @@ namespace WebApplication1.Models.DTOs
         [StringLength(20, ErrorMessage = "El sueldo no puede exceder 20 caracteres")]
         public string SueldoMensual { get; set; } = null!;
 
-        [Required(ErrorMessage = "El RUC es obligatorio")]
         [StringLength(13, MinimumLength = 13, ErrorMessage = "El RUC debe tener 13 caracteres")]
-        public string Ruc { get; set; } = null!;
+        public string? Ruc { get; set; }
 
         [Required(ErrorMessage = "Debe especificar el número de empleados hombres")]
         [Range(0, 1000, ErrorMessage = "El número de empleados hombres debe ser entre 0 y 1000")]
