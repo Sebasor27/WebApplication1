@@ -24,7 +24,6 @@ namespace WebApplication1.Models.DTOs
         [Range(0, 1000, ErrorMessage = "El número de empleados mujeres debe ser entre 0 y 1000")]
         public int? EmpleadosMujeres { get; set; }
 
-        [StringLength(13, MinimumLength = 13, ErrorMessage = "El RUC debe tener 13 caracteres")]
         public string? Ruc { get; set; }
 
         [StringLength(10, MinimumLength = 10, ErrorMessage = "La cédula debe tener 10 caracteres")]
