@@ -19,7 +19,7 @@ public partial class Emprendedore
 
     public string SueldoMensual { get; set; } = null!;
 
-    public string Ruc { get; set; } = null!;
+    public string? Ruc { get; set; }
 
     public int EmpleadosHombres { get; set; }
 
