@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +26,7 @@ namespace WebApplication1.Controllers
             try
             {
                 var emprendedores = await _context.Emprendedores
-                    .Where(e => e.Estado) 
+                    .Where(e => e.Estado)
                     .ToListAsync();
 
                 if (!emprendedores.Any())
@@ -33,55 +34,110 @@ namespace WebApplication1.Controllers
                     return NotFound("No se encontraron emprendedores activos");
                 }
 
-                const int cantidadRangosSueldo = 3;
-                const int cantidadRangosEdad = 3;
+                // Definición de rangos predefinidos
+                var rangosSueldo = new List<(decimal Min, decimal Max, string Nombre)>
+        {
+            (0, 460, "0-460"),
+            (460, 750, "460-750"),
+            (750, 1000, "750-1000"),
+            (1000, decimal.MaxValue, "1000+")
+        };
 
-                var sueldos = emprendedores
-                    .Select(e => decimal.TryParse(e.SueldoMensual, out var sueldo) ? sueldo : 0)
+                // Procesamiento de sueldos (convertir rangos a valores numéricos para cálculos)
+                var sueldosPuntosMedios = emprendedores
+                    .Select(e =>
+                    {
+                        if (string.IsNullOrEmpty(e.SueldoMensual)) return 0m;
+
+                        // Si el sueldo es un rango (ej. "460-750")
+                        if (e.SueldoMensual.Contains("-"))
+                        {
+                            var partes = e.SueldoMensual.Split('-');
+                            if (partes.Length == 2 &&
+                                decimal.TryParse(partes[0].Trim(), out var min) &&
+                                decimal.TryParse(partes[1].Trim(), out var max))
+                            {
+                                return (min + max) / 2; // Punto medio del rango
+                            }
+                        }
+                        // Si el sueldo es un valor directo
+                        else if (decimal.TryParse(e.SueldoMensual, out var valor))
+                        {
+                            return valor;
+                        }
+                        return 0m;
+                    })
                     .Where(s => s > 0)
                     .ToList();
 
+                // Procesamiento de edades
                 var edades = emprendedores
                     .Select(e => int.TryParse(e.Edad, out var edad) ? edad : 0)
                     .Where(e => e > 0)
                     .ToList();
 
-                var rangosSueldo = GenerarRangosDinamicos(sueldos, cantidadRangosSueldo);
-                var rangosEdad = GenerarRangosDinamicos(edades, cantidadRangosEdad);
-
+                // Cálculos estadísticos
                 var totalEmprendedores = emprendedores.Count;
                 var totalEmpleados = emprendedores.Sum(e => e.EmpleadosHombres + e.EmpleadosMujeres);
-                var promedioSueldos = sueldos.Any() ? Math.Round(sueldos.Average(), 2) : 0;
+                var promedioSueldos = sueldosPuntosMedios.Any() ? Math.Round(sueldosPuntosMedios.Average(), 2) : 0;
                 var promedioEdad = edades.Any() ? Math.Round(edades.Average(), 1) : 0;
 
+                // Obtener opciones para filtros
                 var opcionesNivelEstudio = emprendedores
                     .Select(e => e.NivelEstudio)
+                    .Where(n => !string.IsNullOrEmpty(n))
                     .Distinct()
                     .OrderBy(x => x)
                     .ToList();
 
                 var opcionesTipoEmpresa = emprendedores
                     .Select(e => e.TipoEmpresa)
+                    .Where(t => !string.IsNullOrEmpty(t))
                     .Distinct()
                     .OrderBy(x => x)
                     .ToList();
 
                 var opcionesAnios = emprendedores
                     .Select(e => e.AnoCreacionEmpresa)
+                    .Where(a => a != null)
                     .Distinct()
                     .OrderBy(x => x)
                     .ToList();
 
+                // Distribución de sueldos por rangos predefinidos
                 var distribucionSueldos = rangosSueldo
                     .Select(rango => new
                     {
-                        name = $"{rango.Min}-{rango.Max}",
+                        name = rango.Nombre,
                         value = emprendedores.Count(e =>
-                            decimal.TryParse(e.SueldoMensual, out var sueldo) &&
-                            sueldo >= rango.Min &&
-                            sueldo <= rango.Max)
+                        {
+                            if (string.IsNullOrEmpty(e.SueldoMensual)) return false;
+
+                            // Manejar tanto rangos como valores directos
+                            if (e.SueldoMensual.Contains("-"))
+                            {
+                                var partes = e.SueldoMensual.Split('-');
+                                if (partes.Length == 2 &&
+                                    decimal.TryParse(partes[0].Trim(), out var min) &&
+                                    decimal.TryParse(partes[1].Trim(), out var max))
+                                {
+                                    var puntoMedio = (min + max) / 2;
+                                    return puntoMedio >= rango.Min &&
+                                           (rango.Max == decimal.MaxValue || puntoMedio <= rango.Max);
+                                }
+                            }
+                            else if (decimal.TryParse(e.SueldoMensual, out var valor))
+                            {
+                                return valor >= rango.Min &&
+                                       (rango.Max == decimal.MaxValue || valor <= rango.Max);
+                            }
+                            return false;
+                        })
                     })
                     .ToList();
+
+                // Generación dinámica de rangos de edad (3 rangos)
+                var rangosEdad = GenerarRangosEdadDinamicos(edades, 3);
 
                 var distribucionEdades = rangosEdad
                     .Select(rango => new
@@ -104,9 +160,9 @@ namespace WebApplication1.Controllers
 
                 var relacionDependencia = new[]
                 {
-                    new { name = "Dependencia", value = emprendedores.Count(e => e.TrabajoRelacionDependencia) },
-                    new { name = "Independiente", value = emprendedores.Count(e => !e.TrabajoRelacionDependencia) }
-                };
+            new { name = "Dependencia", value = emprendedores.Count(e => e.TrabajoRelacionDependencia) },
+            new { name = "Independiente", value = emprendedores.Count(e => !e.TrabajoRelacionDependencia) }
+        };
 
                 var distribucionTipoEmpresa = opcionesTipoEmpresa
                     .Select(tipo => new
@@ -118,9 +174,9 @@ namespace WebApplication1.Controllers
 
                 var empleadosPorGenero = new[]
                 {
-                    new { name = "Hombres", value = emprendedores.Sum(e => e.EmpleadosHombres) },
-                    new { name = "Mujeres", value = emprendedores.Sum(e => e.EmpleadosMujeres) }
-                };
+            new { name = "Hombres", value = emprendedores.Sum(e => e.EmpleadosHombres) },
+            new { name = "Mujeres", value = emprendedores.Sum(e => e.EmpleadosMujeres) }
+        };
 
                 var evolucionAnual = opcionesAnios
                     .Select(anio => new
@@ -132,10 +188,33 @@ namespace WebApplication1.Controllers
                             .Sum(e => e.EmpleadosHombres + e.EmpleadosMujeres),
                         sueldoPromedio = Math.Round(emprendedores
                             .Where(e => e.AnoCreacionEmpresa == anio)
-                            .Average(e => decimal.TryParse(e.SueldoMensual, out var s) ? s : 0), 2),
+                            .Select(e =>
+                            {
+                                if (string.IsNullOrEmpty(e.SueldoMensual)) return 0m;
+
+                                if (e.SueldoMensual.Contains("-"))
+                                {
+                                    var partes = e.SueldoMensual.Split('-');
+                                    if (partes.Length == 2 &&
+                                        decimal.TryParse(partes[0].Trim(), out var min) &&
+                                        decimal.TryParse(partes[1].Trim(), out var max))
+                                    {
+                                        return (min + max) / 2;
+                                    }
+                                }
+                                else if (decimal.TryParse(e.SueldoMensual, out var valor))
+                                {
+                                    return valor;
+                                }
+                                return 0m;
+                            })
+                            .DefaultIfEmpty(0)
+                            .Average(), 2),
                         edadPromedio = Math.Round(emprendedores
                             .Where(e => e.AnoCreacionEmpresa == anio)
-                            .Average(e => int.TryParse(e.Edad, out var edad) ? edad : 0), 1)
+                            .Select(e => int.TryParse(e.Edad, out var edad) ? edad : 0)
+                            .DefaultIfEmpty(0)
+                            .Average(), 1)
                     })
                     .OrderBy(x => x.anio)
                     .ToList();
@@ -176,6 +255,8 @@ namespace WebApplication1.Controllers
                 return StatusCode(500, $"Error interno del servidor: {ex.Message}");
             }
         }
+
+        // Removed duplicate method
 
         private List<(decimal Min, decimal Max)> GenerarRangosDinamicos(List<decimal> valores, int cantidadRangos)
         {
@@ -219,6 +300,42 @@ namespace WebApplication1.Controllers
             var decimales = valores.Select(v => (decimal)v).ToList();
             var rangosDecimal = GenerarRangosDinamicos(decimales, cantidadRangos);
             return rangosDecimal.Select(r => ((int)r.Min, (int)r.Max)).ToList();
+        }
+
+        private List<(int Min, int Max)> GenerarRangosEdadDinamicos(List<int> edades, int cantidadRangos)
+        {
+            if (!edades.Any()) return new List<(int, int)> { (0, 0) };
+
+            edades.Sort();
+            int min = edades.Min();
+            int max = edades.Max();
+
+            if (min == max) return new List<(int, int)> { (min, max) };
+
+            // Asegurar que haya al menos 5 años de diferencia entre rangos
+            if ((max - min) / cantidadRangos < 5)
+            {
+                max = min + cantidadRangos * 5;
+            }
+
+            int tamañoRango = (max - min) / cantidadRangos;
+            var rangos = new List<(int Min, int Max)>();
+
+            for (int i = 0; i < cantidadRangos; i++)
+            {
+                int rangoMin = min + i * tamañoRango;
+                int rangoMax = (i == cantidadRangos - 1) ? max : rangoMin + tamañoRango - 1;
+
+                // Ajustar para que no haya solapamiento
+                if (i > 0)
+                {
+                    rangoMin = rangos[i - 1].Max + 1;
+                }
+
+                rangos.Add((rangoMin, rangoMax));
+            }
+
+            return rangos;
         }
     }
 }

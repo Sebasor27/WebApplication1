@@ -228,7 +228,8 @@ namespace WebApplication1.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error interno: {ex.Message}");
+                var errorMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return StatusCode(500, $"Error interno: {errorMessage}");
             }
         }
 

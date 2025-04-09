@@ -175,7 +175,7 @@ public partial class CentroEmpContext : DbContext
 
             entity.HasIndex(e => e.IdUsuario, "id_usuario");
 
-            entity.HasIndex(e => e.Ruc, "ruc").IsUnique();
+            entity.HasIndex(e => e.Ruc, "ruc");
 
             entity.Property(e => e.IdEmprendedor).HasColumnName("id_emprendedor");
             entity.Property(e => e.AnoCreacionEmpresa).HasColumnName("ano_creacion_empresa");
