@@ -10,7 +10,6 @@ using WebApplication1.Models;
 
 namespace WebApplication1.Controllers
 {
-    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class EstadisticasEmprendedoresController : ControllerBase
