@@ -35,7 +35,6 @@ namespace WebApplication1.Controllers
                     return NotFound("No se encontraron emprendedores activos");
                 }
 
-                // Definición de rangos predefinidos
                 var rangosSueldo = new List<(decimal Min, decimal Max, string Nombre)>
         {
             (0, 460, "0-460"),
@@ -44,13 +43,11 @@ namespace WebApplication1.Controllers
             (1000, decimal.MaxValue, "1000+")
         };
 
-                // Procesamiento de sueldos (convertir rangos a valores numéricos para cálculos)
                 var sueldosPuntosMedios = emprendedores
                     .Select(e =>
                     {
                         if (string.IsNullOrEmpty(e.SueldoMensual)) return 0m;
 
-                        // Si el sueldo es un rango (ej. "460-750")
                         if (e.SueldoMensual.Contains("-"))
                         {
                             var partes = e.SueldoMensual.Split('-');
@@ -58,10 +55,9 @@ namespace WebApplication1.Controllers
                                 decimal.TryParse(partes[0].Trim(), out var min) &&
                                 decimal.TryParse(partes[1].Trim(), out var max))
                             {
-                                return (min + max) / 2; // Punto medio del rango
+                                return (min + max) / 2; 
                             }
                         }
-                        // Si el sueldo es un valor directo
                         else if (decimal.TryParse(e.SueldoMensual, out var valor))
                         {
                             return valor;
@@ -71,19 +67,16 @@ namespace WebApplication1.Controllers
                     .Where(s => s > 0)
                     .ToList();
 
-                // Procesamiento de edades
                 var edades = emprendedores
                     .Select(e => int.TryParse(e.Edad, out var edad) ? edad : 0)
                     .Where(e => e > 0)
                     .ToList();
 
-                // Cálculos estadísticos
                 var totalEmprendedores = emprendedores.Count;
                 var totalEmpleados = emprendedores.Sum(e => e.EmpleadosHombres + e.EmpleadosMujeres);
                 var promedioSueldos = sueldosPuntosMedios.Any() ? Math.Round(sueldosPuntosMedios.Average(), 2) : 0;
                 var promedioEdad = edades.Any() ? Math.Round(edades.Average(), 1) : 0;
 
-                // Obtener opciones para filtros
                 var opcionesNivelEstudio = emprendedores
                     .Select(e => e.NivelEstudio)
                     .Where(n => !string.IsNullOrEmpty(n))
@@ -105,7 +98,6 @@ namespace WebApplication1.Controllers
                     .OrderBy(x => x)
                     .ToList();
 
-                // Distribución de sueldos por rangos predefinidos
                 var distribucionSueldos = rangosSueldo
                     .Select(rango => new
                     {
@@ -114,7 +106,6 @@ namespace WebApplication1.Controllers
                         {
                             if (string.IsNullOrEmpty(e.SueldoMensual)) return false;
 
-                            // Manejar tanto rangos como valores directos
                             if (e.SueldoMensual.Contains("-"))
                             {
                                 var partes = e.SueldoMensual.Split('-');
@@ -137,7 +128,6 @@ namespace WebApplication1.Controllers
                     })
                     .ToList();
 
-                // Generación dinámica de rangos de edad (3 rangos)
                 var rangosEdad = GenerarRangosEdadDinamicos(edades, 3);
 
                 var distribucionEdades = rangosEdad
@@ -257,7 +247,6 @@ namespace WebApplication1.Controllers
             }
         }
 
-        // Removed duplicate method
 
         private List<(decimal Min, decimal Max)> GenerarRangosDinamicos(List<decimal> valores, int cantidadRangos)
         {
@@ -313,7 +302,6 @@ namespace WebApplication1.Controllers
 
             if (min == max) return new List<(int, int)> { (min, max) };
 
-            // Asegurar que haya al menos 5 años de diferencia entre rangos
             if ((max - min) / cantidadRangos < 5)
             {
                 max = min + cantidadRangos * 5;
@@ -327,7 +315,6 @@ namespace WebApplication1.Controllers
                 int rangoMin = min + i * tamañoRango;
                 int rangoMax = (i == cantidadRangos - 1) ? max : rangoMin + tamañoRango - 1;
 
-                // Ajustar para que no haya solapamiento
                 if (i > 0)
                 {
                     rangoMin = rangos[i - 1].Max + 1;
