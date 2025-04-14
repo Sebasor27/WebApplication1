@@ -11,8 +11,8 @@ namespace WebApplication1.Services
         ResultadoIepmCompleto CalculateAndSaveIEPM(int idEmprendedor, int idEncuesta);
         ResultadoIepmCompleto GetLastResult(int idEmprendedor);
 
-        List<EncuestaConResultadoDto> GetEncuestasConResultados(int idEmprendedor); 
-        ResultadoIepmCompleto GetResultadoPorEncuestaIepm(int idEmprendedor, int idEncuesta); 
+        List<EncuestaConResultadoDto> GetEncuestasConResultados(int idEmprendedor);
+        ResultadoIepmCompleto GetResultadoPorEncuestaIepm(int idEmprendedor, int idEncuesta);
     }
 
     public class IepmCalculatorService : IIepmCalculatorService
@@ -238,6 +238,20 @@ namespace WebApplication1.Services
                 throw new KeyNotFoundException("No se encontraron resultados para esta encuesta");
             }
 
+            // Modificación clave: Asegurar que la acción de mejora esté en resultadosAccionesIepms
+            if (resultado.ResultadosAccionesIepms.Count == 0)
+            {
+                var accion = GetAccionMejora(resultado.Iepm);
+                if (accion != null)
+                {
+                    resultado.ResultadosAccionesIepms.Add(new ResultadosAccionesIepm
+                    {
+                        IdAccionNavigation = accion,
+                        IdResultadoIepmNavigation = resultado
+                    });
+                }
+            }
+
             return new ResultadoIepmCompleto
             {
                 IEPM = resultado,
@@ -264,17 +278,19 @@ namespace WebApplication1.Services
         private AccionesMejoraIepm GetAccionMejora(decimal iepmScore)
         {
             return _context.AccionesMejoraIepms
-                .FirstOrDefault(a => iepmScore >= a.RangoMin && iepmScore < a.RangoMax);
+                .FirstOrDefault(a => iepmScore >= a.RangoMin &&
+                                   (iepmScore <= a.RangoMax ||
+                                    (a.RangoMax == 1m && iepmScore == 1m)));
         }
 
         private ResultadosIepm SaveResults(
-      int idEmprendedor,
-      int idEncuesta,
-      decimal iepmScore,
-      string valoracion,
-      List<ResultadosDimensionesIepm> dimensionResults,
-      List<ResultadosIndicadoresIepm> indicatorResults,
-      AccionesMejoraIepm accionMejora)
+    int idEmprendedor,
+    int idEncuesta,
+    decimal iepmScore,
+    string valoracion,
+    List<ResultadosDimensionesIepm> dimensionResults,
+    List<ResultadosIndicadoresIepm> indicatorResults,
+    AccionesMejoraIepm accionMejora)
         {
             try
             {
@@ -302,12 +318,15 @@ namespace WebApplication1.Services
                     _context.ResultadosIndicadoresIepms.Add(ind);
                 }
 
-                if (accionMejora != null)
+                var accionFinal = accionMejora ?? GetAccionMejora(iepmScore);
+                if (accionFinal != null)
                 {
                     _context.ResultadosAccionesIepms.Add(new ResultadosAccionesIepm
                     {
                         IdResultadoIepm = resultadoIepm.IdResultadoIepm,
-                        IdAccion = accionMejora.IdAccion
+                        IdAccion = accionFinal.IdAccion,
+                        IdAccionNavigation = accionFinal,
+                        IdResultadoIepmNavigation = resultadoIepm
                     });
                 }
 
