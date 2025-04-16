@@ -238,7 +238,6 @@ namespace WebApplication1.Services
                 throw new KeyNotFoundException("No se encontraron resultados para esta encuesta");
             }
 
-            // Modificación clave: Asegurar que la acción de mejora esté en resultadosAccionesIepms
             if (resultado.ResultadosAccionesIepms.Count == 0)
             {
                 var accion = GetAccionMejora(resultado.Iepm);
@@ -269,9 +268,9 @@ namespace WebApplication1.Services
 
         private string GetEvaluation(decimal iepmScore)
         {
-            if (iepmScore < 0.3m) return "Muy inadecuada puesta en marcha";
-            if (iepmScore < 0.6m) return "Inadecuada puesta en marcha";
-            if (iepmScore < 0.8m) return "Adecuada puesta en marcha";
+            if (iepmScore <= 0.3m) return "Muy inadecuada puesta en marcha";
+            if (iepmScore <= 0.6m) return "Inadecuada puesta en marcha";
+            if (iepmScore <= 0.8m) return "Adecuada puesta en marcha";
             return "Muy adecuada puesta en marcha";
         }
 
